@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 mb-4">Welcome to Expense Tracker</h1>
+        <p class="lead mb-4">Track your expenses, share with friends, and manage your finances together.</p>
+        
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <i class="bi bi-cash-stack display-4 text-primary mb-3"></i>
+                        <h3>Track Expenses</h3>
+                        <p>Easily record and categorize your daily expenses</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <i class="bi bi-people display-4 text-primary mb-3"></i>
+                        <h3>Share Expenses</h3>
+                        <p>Split bills and track shared expenses with friends</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <i class="bi bi-graph-up display-4 text-primary mb-3"></i>
+                        <h3>View Analytics</h3>
+                        <p>Get insights into your spending patterns</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if not current_user.is_authenticated %}
+        <div class="mt-4">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">Get Started</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
