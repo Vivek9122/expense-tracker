@@ -7,15 +7,19 @@ import os
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(24)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///expenses.db')
 
 # Email configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')  # Set this in environment
-app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASSWORD')  # Set this in environment
+app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')
+app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASSWORD')
+
+# Handle SQLite database URL for production
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 
 db = SQLAlchemy(app)
 mail = Mail(app)
@@ -210,6 +214,23 @@ Expense Tracker Team'''
         print(f"Failed to send email: {e}")
     
     return jsonify({'success': True})
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+        if not current_user.check_password(current_password):
+            flash('Current password is incorrect.', 'danger')
+        elif new_password != confirm_password:
+            flash('New passwords do not match.', 'danger')
+        else:
+            current_user.set_password(new_password)
+            db.session.commit()
+            flash('Password updated successfully!', 'success')
+    return render_template('profile.html', user=current_user)
 
 if __name__ == '__main__':
     with app.app_context():
