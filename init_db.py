@@ -1,6 +1,7 @@
 from app import db, app
 
 with app.app_context():
-   # Only create tables if they don't exist (safe for production)
+   # Drop all tables and recreate them with correct column sizes
+   db.drop_all()
    db.create_all()
-   print("Database tables created successfully!")
+   print("Database tables dropped and recreated with correct column sizes!")
