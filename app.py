@@ -333,6 +333,51 @@ def mark_paid():
     
     return jsonify({'success': True})
 
+@app.route('/edit_expense', methods=['POST'])
+@login_required
+def edit_expense():
+    expense_id = request.form.get('expense_id')
+    description = request.form.get('description')
+    amount = request.form.get('amount')
+    category = request.form.get('category')
+    
+    expense = Expense.query.get_or_404(expense_id)
+    
+    # Only the owner can edit the expense
+    if expense.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+    
+    try:
+        expense.description = description
+        expense.amount = float(amount)
+        expense.category = category
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/delete_expense', methods=['POST'])
+@login_required
+def delete_expense():
+    data = request.get_json()
+    expense_id = data.get('expense_id')
+    
+    expense = Expense.query.get_or_404(expense_id)
+    
+    # Only the owner can delete the expense
+    if expense.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+    
+    try:
+        # Delete associated expense shares first
+        ExpenseShare.query.filter_by(expense_id=expense_id).delete()
+        # Delete the expense
+        db.session.delete(expense)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 # Force table recreation on app startup (temporary fix for column size issue)
 try:
     with app.app_context():
