@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <div class="card">
             <div class="card-header">
                 <h3 class="text-center">Add New Expense</h3>
@@ -10,10 +10,10 @@
             <div class="card-body">
                 <form method="POST" action="{{ url_for('add_expense') }}">
                     <div class="mb-3">
-                        <label for="amount" class="form-label">Amount</label>
+                        <label for="amount" class="form-label">Total Amount</label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="amount" name="amount" step="0.01" required>
+                            <input type="number" class="form-control" id="amount" name="amount" step="0.01" required onchange="calculateSplit()">
                         </div>
                     </div>
                     <div class="mb-3">
@@ -35,6 +35,43 @@
                             <option value="Other">Other</option>
                         </select>
                     </div>
+                    
+                    <!-- Expense Sharing Section -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="shareExpense" name="share_expense" onchange="toggleSharing()">
+                                <label class="form-check-label" for="shareExpense">
+                                    <strong>Share this expense</strong>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="sharingOptions" style="display: none;">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="shareWith" class="form-label">Share with (Email)</label>
+                                    <input type="email" class="form-control" id="shareWith" name="share_with" placeholder="friend@example.com">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="shareAmount" class="form-label">Their Share ($)</label>
+                                    <input type="number" class="form-control" id="shareAmount" name="share_amount" step="0.01" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="equalSplit()">
+                                        Equal Split (50/50)
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        Your share: $<span id="yourShare">0.00</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">Add Expense</button>
                         <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
@@ -44,4 +81,42 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleSharing() {
+    const checkbox = document.getElementById('shareExpense');
+    const options = document.getElementById('sharingOptions');
+    
+    if (checkbox.checked) {
+        options.style.display = 'block';
+        calculateSplit();
+    } else {
+        options.style.display = 'none';
+        document.getElementById('shareWith').value = '';
+        document.getElementById('shareAmount').value = '';
+        document.getElementById('yourShare').textContent = '0.00';
+    }
+}
+
+function equalSplit() {
+    const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
+    const halfAmount = (totalAmount / 2).toFixed(2);
+    
+    document.getElementById('shareAmount').value = halfAmount;
+    document.getElementById('yourShare').textContent = halfAmount;
+}
+
+function calculateSplit() {
+    const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
+    const shareAmount = parseFloat(document.getElementById('shareAmount').value) || 0;
+    const yourShare = (totalAmount - shareAmount).toFixed(2);
+    
+    document.getElementById('yourShare').textContent = yourShare;
+}
+
+// Update your share when share amount changes
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('shareAmount').addEventListener('input', calculateSplit);
+});
+</script>
 {% endblock %} 

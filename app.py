@@ -152,6 +152,12 @@ def add_expense():
         description = request.form['description']
         category = request.form['category']
         
+        # Check if expense should be shared
+        share_expense = request.form.get('share_expense')
+        share_with_email = request.form.get('share_with')
+        share_amount = request.form.get('share_amount')
+        
+        # Create the expense
         expense = Expense(
             amount=amount,
             description=description,
@@ -159,8 +165,64 @@ def add_expense():
             user_id=current_user.id
         )
         db.session.add(expense)
+        db.session.flush()  # Get the expense ID
+        
+        # Handle sharing if requested
+        if share_expense and share_with_email and share_amount:
+            try:
+                share_amount_float = float(share_amount)
+                
+                # Find the user to share with
+                shared_user = User.query.filter_by(email=share_with_email.strip()).first()
+                
+                if shared_user:
+                    if shared_user.id != current_user.id:  # Can't share with yourself
+                        if share_amount_float <= amount:  # Share amount can't exceed total
+                            # Create the expense share
+                            expense_share = ExpenseShare(
+                                expense_id=expense.id,
+                                user_id=shared_user.id,
+                                amount=share_amount_float
+                            )
+                            db.session.add(expense_share)
+                            
+                            # Send email notification if configured
+                            try:
+                                if app.config['MAIL_USERNAME']:
+                                    msg = Message(
+                                        'New Expense Shared with You',
+                                        sender=app.config['MAIL_USERNAME'],
+                                        recipients=[share_with_email]
+                                    )
+                                    msg.body = f'''Hello,
+
+{current_user.username} has shared an expense with you:
+Description: {description}
+Total Amount: ${amount}
+Your Share: ${share_amount_float}
+Category: {category}
+
+Please log in to your account to view and manage this shared expense.
+
+Best regards,
+Expense Tracker Team'''
+                                    mail.send(msg)
+                            except Exception as e:
+                                print(f"Failed to send email: {e}")
+                            
+                            flash(f'Expense added and shared with {share_with_email}!', 'success')
+                        else:
+                            flash('Share amount cannot exceed total expense amount!', 'warning')
+                    else:
+                        flash('You cannot share an expense with yourself!', 'warning')
+                else:
+                    flash(f'User with email {share_with_email} not found. Expense added but not shared.', 'warning')
+            except ValueError:
+                flash('Invalid share amount. Expense added but not shared.', 'warning')
+        else:
+            flash('Expense added successfully!', 'success')
+        
         db.session.commit()
-        flash('Expense added successfully!', 'success')
         return redirect(url_for('dashboard'))
     
     return render_template('add_expense.html')
