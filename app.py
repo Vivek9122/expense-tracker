@@ -232,7 +232,16 @@ def profile():
             flash('Password updated successfully!', 'success')
     return render_template('profile.html', user=current_user)
 
+# Force table recreation on app startup (temporary fix for column size issue)
+try:
+   with app.app_context():
+       db.drop_all()
+       db.create_all()
+       print("Tables dropped and recreated with correct column sizes!")
+except Exception as e:
+   print(f"Error recreating tables: {e}")
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True) 
+   with app.app_context():
+       db.create_all()
+   app.run(debug=True)
