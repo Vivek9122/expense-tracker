@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Total Expenses</h5>
@@ -10,19 +10,27 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card mb-4">
             <div class="card-body">
-                <h5 class="card-title">Shared Expenses</h5>
-                <h2 class="text-primary">${{ "%.2f"|format(total_shared) }}</h2>
+                <h5 class="card-title">You Owe</h5>
+                <h2 class="text-danger">${{ "%.2f"|format(total_owed_by_you) }}</h2>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Others Owe You</h5>
+                <h2 class="text-success">${{ "%.2f"|format(total_owed_to_you) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Pending Payments</h5>
-                <h2 class="text-primary">${{ "%.2f"|format(total_pending) }}</h2>
+                <h2 class="text-warning">${{ "%.2f"|format(total_pending) }}</h2>
             </div>
         </div>
     </div>
@@ -43,8 +51,9 @@
                                 <th>Date</th>
                                 <th>Description</th>
                                 <th>Category</th>
-                                <th>Amount</th>
-                                <th>Shared</th>
+                                <th>Total Amount</th>
+                                <th>Your Share</th>
+                                <th>Shared With</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -56,16 +65,29 @@
                                 <td>{{ expense.category }}</td>
                                 <td>${{ "%.2f"|format(expense.amount) }}</td>
                                 <td>
+                                    {% set shared_amount = 0 %}
+                                    {% for share in expense.shared_with %}
+                                        {% set shared_amount = shared_amount + share.amount %}
+                                    {% endfor %}
+                                    ${{ "%.2f"|format(expense.amount - shared_amount) }}
+                                </td>
+                                <td>
                                     {% if expense.shared_with %}
-                                        <span class="badge bg-info">Yes</span>
+                                        {% for share in expense.shared_with %}
+                                            <span class="badge bg-info me-1">
+                                                {{ share.user.username }}: ${{ "%.2f"|format(share.amount) }}
+                                            </span>
+                                        {% endfor %}
                                     {% else %}
-                                        <span class="badge bg-secondary">No</span>
+                                        <span class="badge bg-secondary">Not shared</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="shareExpense({{ expense.id }})">
-                                        Share
-                                    </button>
+                                    {% if not expense.shared_with %}
+                                        <button class="btn btn-sm btn-outline-primary" onclick="shareExpense({{ expense.id }})">
+                                            Share
+                                        </button>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -76,6 +98,60 @@
         </div>
     </div>
 </div>
+
+{% if shared_expenses %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Expenses Shared With You</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Paid By</th>
+                                <th>Your Share</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for share in shared_expenses %}
+                            <tr>
+                                <td>{{ share.expense.date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ share.expense.description }}</td>
+                                <td>{{ share.expense.user.username }}</td>
+                                <td>${{ "%.2f"|format(share.amount) }}</td>
+                                <td>
+                                    {% if share.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif share.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ share.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if share.status == 'pending' %}
+                                        <button class="btn btn-sm btn-success" onclick="markAsPaid({{ share.id }})">
+                                            Mark as Paid
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Share Expense Modal -->
 <div class="modal fade" id="shareExpenseModal" tabindex="-1">
@@ -119,6 +195,24 @@ function submitShare() {
     fetch('/share_expense', {
         method: 'POST',
         body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+
+function markAsPaid(shareId) {
+    fetch('/mark_paid', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({share_id: shareId})
     })
     .then(response => response.json())
     .then(data => {

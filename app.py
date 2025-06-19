@@ -130,19 +130,41 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # Get expenses created by current user
     expenses = Expense.query.filter_by(user_id=current_user.id).order_by(Expense.date.desc()).all()
-    shared_expenses = ExpenseShare.query.filter_by(user_id=current_user.id).all()
     
+    # Get expenses shared with current user (where you owe money)
+    shared_expenses_owed = ExpenseShare.query.filter_by(user_id=current_user.id).all()
+    
+    # Get expenses that current user has shared with others (where others owe you)
+    expenses_you_shared = db.session.query(ExpenseShare).join(Expense).filter(
+        Expense.user_id == current_user.id
+    ).all()
+    
+    # Calculate totals
     total_expenses = sum(expense.amount for expense in expenses)
-    total_shared = sum(share.amount for share in shared_expenses)
-    total_pending = sum(share.amount for share in shared_expenses if share.status == 'pending')
+    
+    # Total amount you owe to others
+    total_owed_by_you = sum(share.amount for share in shared_expenses_owed)
+    
+    # Total amount others owe you
+    total_owed_to_you = sum(share.amount for share in expenses_you_shared)
+    
+    # Net shared expenses (what you owe minus what others owe you)
+    total_shared = total_owed_by_you - total_owed_to_you
+    
+    # Pending payments (only what you owe to others with pending status)
+    total_pending = sum(share.amount for share in shared_expenses_owed if share.status == 'pending')
     
     return render_template('dashboard.html',
                          expenses=expenses,
-                         shared_expenses=shared_expenses,
+                         shared_expenses=shared_expenses_owed,
+                         expenses_you_shared=expenses_you_shared,
                          total_expenses=total_expenses,
-                         total_shared=total_shared,
-                         total_pending=total_pending)
+                         total_shared=abs(total_shared),  # Show absolute value
+                         total_pending=total_pending,
+                         total_owed_by_you=total_owed_by_you,
+                         total_owed_to_you=total_owed_to_you)
 
 @app.route('/add_expense', methods=['GET', 'POST'])
 @login_required
@@ -294,16 +316,33 @@ def profile():
             flash('Password updated successfully!', 'success')
     return render_template('profile.html', user=current_user)
 
+@app.route('/mark_paid', methods=['POST'])
+@login_required
+def mark_paid():
+    data = request.get_json()
+    share_id = data.get('share_id')
+    
+    share = ExpenseShare.query.get_or_404(share_id)
+    
+    # Only the person who owes money can mark it as paid
+    if share.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+    
+    share.status = 'paid'
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
 # Force table recreation on app startup (temporary fix for column size issue)
 try:
-   with app.app_context():
-       db.drop_all()
-       db.create_all()
-       print("Tables dropped and recreated with correct column sizes!")
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        print("Tables dropped and recreated with correct column sizes!")
 except Exception as e:
-   print(f"Error recreating tables: {e}")
+    print(f"Error recreating tables: {e}")
 
 if __name__ == '__main__':
-   with app.app_context():
-       db.create_all()
-   app.run(debug=True)
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
