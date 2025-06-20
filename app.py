@@ -150,17 +150,23 @@ def logout():
 @app.route('/dashboard/<int:group_id>')
 @login_required
 def dashboard(group_id=None):
-    # Get user's groups
-    user_groups = db.session.query(Group).join(GroupMember).filter(
-        GroupMember.user_id == current_user.id
-    ).all()
-    
-    # If no group specified, redirect to first available group or groups page
-    if group_id is None:
-        if user_groups:
-            return redirect(url_for('dashboard', group_id=user_groups[0].id))
-        else:
-            return redirect(url_for('groups'))
+    try:
+        # Get user's groups
+        user_groups = db.session.query(Group).join(GroupMember).filter(
+            GroupMember.user_id == current_user.id
+        ).all()
+        
+        # If no group specified, redirect to first available group or groups page
+        if group_id is None:
+            if user_groups:
+                return redirect(url_for('dashboard', group_id=user_groups[0].id))
+            else:
+                return redirect(url_for('groups'))
+    except Exception as e:
+        # If there's a database error (tables don't exist), redirect to groups page
+        print(f"Dashboard error: {e}")
+        flash('Please create a group first to start tracking expenses.', 'info')
+        return redirect(url_for('groups'))
     
     # Verify user has access to this group
     current_group = None
@@ -271,40 +277,51 @@ def dashboard(group_id=None):
 @app.route('/groups')
 @login_required
 def groups():
-    # Get user's groups
-    user_groups = db.session.query(Group).join(GroupMember).filter(
-        GroupMember.user_id == current_user.id
-    ).all()
-    
-    return render_template('groups.html', user_groups=user_groups)
+    try:
+        # Get user's groups
+        user_groups = db.session.query(Group).join(GroupMember).filter(
+            GroupMember.user_id == current_user.id
+        ).all()
+        
+        return render_template('groups.html', user_groups=user_groups)
+    except Exception as e:
+        print(f"Groups page error: {e}")
+        # If tables don't exist, show empty groups page
+        return render_template('groups.html', user_groups=[])
 
 @app.route('/create_group', methods=['GET', 'POST'])
 @login_required
 def create_group():
     if request.method == 'POST':
-        name = request.form['name']
-        description = request.form.get('description', '')
-        
-        # Create the group
-        group = Group(
-            name=name,
-            description=description,
-            created_by=current_user.id
-        )
-        db.session.add(group)
-        db.session.flush()  # Get the group ID
-        
-        # Add creator as admin member
-        membership = GroupMember(
-            group_id=group.id,
-            user_id=current_user.id,
-            is_admin=True
-        )
-        db.session.add(membership)
-        db.session.commit()
-        
-        flash(f'Group "{name}" created successfully!', 'success')
-        return redirect(url_for('dashboard', group_id=group.id))
+        try:
+            name = request.form['name']
+            description = request.form.get('description', '')
+            
+            # Create the group
+            group = Group(
+                name=name,
+                description=description,
+                created_by=current_user.id
+            )
+            db.session.add(group)
+            db.session.flush()  # Get the group ID
+            
+            # Add creator as admin member
+            membership = GroupMember(
+                group_id=group.id,
+                user_id=current_user.id,
+                is_admin=True
+            )
+            db.session.add(membership)
+            db.session.commit()
+            
+            flash(f'Group "{name}" created successfully!', 'success')
+            return redirect(url_for('dashboard', group_id=group.id))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Create group error: {e}")
+            flash('Error creating group. Please ensure the database is properly set up.', 'danger')
+            return render_template('create_group.html')
     
     return render_template('create_group.html')
 
@@ -743,7 +760,32 @@ def delete_expense():
         return jsonify({'success': False, 'message': str(e)})
 
 # Create tables if they don't exist
+def create_tables():
+    """Create database tables with error handling"""
+    try:
+        db.create_all()
+        print("✅ Database tables created/verified successfully")
+    except Exception as e:
+        print(f"❌ Error creating database tables: {e}")
+        # Try to run our migration script
+        try:
+            import subprocess
+            import sys
+            result = subprocess.run([sys.executable, 'migrate_groups.py'], 
+                                  capture_output=True, text=True, cwd=os.path.dirname(__file__))
+            if result.returncode == 0:
+                print("✅ Migration completed successfully")
+                db.create_all()  # Try again after migration
+            else:
+                print(f"❌ Migration failed: {result.stderr}")
+        except Exception as migration_error:
+            print(f"❌ Migration script error: {migration_error}")
+
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        create_tables()
     app.run(debug=True)
+else:
+    # When running in production (like Render), create tables on startup
+    with app.app_context():
+        create_tables()
