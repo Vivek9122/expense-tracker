@@ -763,23 +763,117 @@ def delete_expense():
 def create_tables():
     """Create database tables with error handling"""
     try:
+        # First try to run migration to ensure all tables exist
+        run_database_migration()
         db.create_all()
         print("✅ Database tables created/verified successfully")
     except Exception as e:
         print(f"❌ Error creating database tables: {e}")
-        # Try to run our migration script
+        # Still try to create basic tables
         try:
-            import subprocess
-            import sys
-            result = subprocess.run([sys.executable, 'migrate_groups.py'], 
-                                  capture_output=True, text=True, cwd=os.path.dirname(__file__))
-            if result.returncode == 0:
-                print("✅ Migration completed successfully")
-                db.create_all()  # Try again after migration
-            else:
-                print(f"❌ Migration failed: {result.stderr}")
-        except Exception as migration_error:
-            print(f"❌ Migration script error: {migration_error}")
+            db.create_all()
+        except:
+            pass
+
+def run_database_migration():
+    """Run database migration to add groups functionality"""
+    try:
+        from sqlalchemy import text, inspect
+        
+        # Check if Group table exists
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        
+        if 'group' not in tables:
+            print("🔄 Running database migration for groups functionality...")
+            
+            with db.engine.connect() as conn:
+                trans = conn.begin()
+                try:
+                    # Create Group table
+                    conn.execute(text("""
+                        CREATE TABLE IF NOT EXISTS "group" (
+                            id SERIAL PRIMARY KEY,
+                            name VARCHAR(100) NOT NULL,
+                            description VARCHAR(500),
+                            created_by INTEGER NOT NULL REFERENCES "user"(id),
+                            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    
+                    # Create GroupMember table  
+                    conn.execute(text("""
+                        CREATE TABLE IF NOT EXISTS group_member (
+                            id SERIAL PRIMARY KEY,
+                            group_id INTEGER NOT NULL REFERENCES "group"(id),
+                            user_id INTEGER NOT NULL REFERENCES "user"(id),
+                            joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            is_admin BOOLEAN DEFAULT FALSE,
+                            UNIQUE(group_id, user_id)
+                        )
+                    """))
+                    
+                    # Check if group_id column exists in expense table
+                    expense_columns = [col['name'] for col in inspector.get_columns('expense')] if 'expense' in tables else []
+                    
+                    if 'expense' in tables and 'group_id' not in expense_columns:
+                        # Add group_id column
+                        conn.execute(text("ALTER TABLE expense ADD COLUMN group_id INTEGER"))
+                        
+                        # Create a default group if there are existing expenses
+                        result = conn.execute(text("SELECT COUNT(*) as count FROM expense")).fetchone()
+                        if result and result.count > 0:
+                            # Get first user
+                            first_user = conn.execute(text("SELECT id FROM \"user\" ORDER BY id LIMIT 1")).fetchone()
+                            if first_user:
+                                # Create default group
+                                conn.execute(text("""
+                                    INSERT INTO "group" (name, description, created_by)
+                                    VALUES ('Default Group', 'Auto-created for existing expenses', :user_id)
+                                """), {"user_id": first_user.id})
+                                
+                                # Get default group ID
+                                default_group = conn.execute(text("""
+                                    SELECT id FROM "group" WHERE name = 'Default Group' AND created_by = :user_id ORDER BY id DESC LIMIT 1
+                                """), {"user_id": first_user.id}).fetchone()
+                                
+                                if default_group:
+                                    # Add all users to default group
+                                    conn.execute(text("""
+                                        INSERT INTO group_member (group_id, user_id, is_admin)
+                                        SELECT :group_id, id, TRUE FROM "user"
+                                    """), {"group_id": default_group.id})
+                                    
+                                    # Update existing expenses
+                                    conn.execute(text("""
+                                        UPDATE expense SET group_id = :group_id WHERE group_id IS NULL
+                                    """), {"group_id": default_group.id})
+                        
+                        # Make group_id NOT NULL and add foreign key
+                        conn.execute(text("ALTER TABLE expense ALTER COLUMN group_id SET NOT NULL"))
+                        conn.execute(text("""
+                            ALTER TABLE expense ADD CONSTRAINT fk_expense_group 
+                            FOREIGN KEY (group_id) REFERENCES "group"(id)
+                        """))
+                    
+                    # Check if paid_by column exists
+                    if 'expense' in tables and 'paid_by' not in expense_columns:
+                        conn.execute(text("ALTER TABLE expense ADD COLUMN paid_by INTEGER REFERENCES \"user\"(id)"))
+                        conn.execute(text("UPDATE expense SET paid_by = user_id WHERE paid_by IS NULL"))
+                    
+                    trans.commit()
+                    print("✅ Database migration completed successfully!")
+                    
+                except Exception as e:
+                    trans.rollback()
+                    print(f"❌ Migration failed: {e}")
+                    raise
+        else:
+            print("✅ Groups tables already exist, skipping migration")
+            
+    except Exception as e:
+        print(f"❌ Migration error: {e}")
+        # Don't raise the error, let the app continue
 
 if __name__ == '__main__':
     with app.app_context():
