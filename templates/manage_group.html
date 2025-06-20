@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row" data-group-id="{{ group.id }}">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Manage Group: {{ group.name }}</h5>
+                <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-outline-primary btn-sm">Back to Dashboard</a>
+            </div>
+            <div class="card-body">
+                <h6>Group Members</h6>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Joined</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user, membership in members %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ membership.joined_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if membership.is_admin %}
+                                        <span class="badge bg-primary">Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Member</span>
+                                    {% endif %}
+                                    {% if group.created_by == user.id %}
+                                        <span class="badge bg-success">Creator</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if group.created_by != user.id %}
+                                        <button class="btn btn-sm btn-outline-danger remove-member-btn" 
+                                                data-user-id="{{ user.id }}" 
+                                                data-username="{{ user.username }}">
+                                            Remove
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Add Member</h5>
+            </div>
+            <div class="card-body">
+                <form id="addMemberForm">
+                    <input type="hidden" name="group_id" value="{{ group.id }}">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="form-text">Enter the email address of the person you want to add.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Member</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Group Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ group.name }}</p>
+                <p><strong>Description:</strong> {{ group.description or 'No description' }}</p>
+                <p><strong>Created:</strong> {{ group.created_at.strftime('%Y-%m-%d') }}</p>
+                <p><strong>Members:</strong> {{ members|length }}</p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0 text-danger">Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Delete this group permanently. This action cannot be undone.</p>
+                <button class="btn btn-danger delete-group-btn">Delete Group</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('addMemberForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/add_member', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+});
+
+// Handle remove member buttons
+document.querySelectorAll('.remove-member-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const userId = this.dataset.userId;
+        const username = this.dataset.username;
+        const groupId = document.querySelector('[data-group-id]').dataset.groupId;
+        
+        if (confirm('Are you sure you want to remove ' + username + ' from this group?')) {
+            fetch('/remove_member', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    group_id: parseInt(groupId),
+                    user_id: parseInt(userId)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    });
+});
+
+// Handle delete group button
+document.querySelector('.delete-group-btn').addEventListener('click', function() {
+    const groupId = document.querySelector('[data-group-id]').dataset.groupId;
+    
+    if (confirm('Are you sure you want to delete this group? This will delete all expenses and cannot be undone.')) {
+        fetch('/delete_group', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                group_id: parseInt(groupId)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/groups';
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

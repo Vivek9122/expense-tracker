@@ -4,119 +4,256 @@
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">Add New Expense</h3>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Add Expense - {{ group.name }}</h5>
+                <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('add_expense') }}">
-                    <div class="mb-3">
-                        <label for="amount" class="form-label">Total Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="amount" name="amount" step="0.01" required onchange="calculateSplit()">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <input type="text" class="form-control" id="description" name="description" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Transportation">Transportation</option>
+                                    <option value="Housing">Housing</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
+                    
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <input type="text" class="form-control" id="description" name="description" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="category" class="form-label">Category</label>
-                        <select class="form-select" id="category" name="category" required>
-                            <option value="">Select a category</option>
-                            <option value="Food">Food</option>
-                            <option value="Transportation">Transportation</option>
-                            <option value="Housing">Housing</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Healthcare">Healthcare</option>
-                            <option value="Education">Education</option>
-                            <option value="Other">Other</option>
-                        </select>
+                        <label for="amount" class="form-label">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="amount" name="amount" step="0.01" required>
+                        </div>
                     </div>
                     
-                    <!-- Expense Sharing Section -->
-                    <div class="card mb-3">
+                    <!-- NEW: Paid by dropdown -->
+                    <div class="mb-3">
+                        <label for="paid_by" class="form-label">Paid by</label>
+                        <select class="form-select" id="paid_by" name="paid_by" required>
+                            {% for member in all_group_members %}
+                                <option value="{{ member.id }}" {% if member.id == current_user.id %}selected{% endif %}>
+                                    {% if member.id == current_user.id %}
+                                        You ({{ member.username }})
+                                    {% else %}
+                                        {{ member.username }}
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select who actually paid for this expense.</div>
+                    </div>
+                    
+                    <!-- Multiple Member Splitting Section -->
+                    <div class="card mt-4">
                         <div class="card-header">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="shareExpense" name="share_expense" onchange="toggleSharing()">
-                                <label class="form-check-label" for="shareExpense">
-                                    <strong>Share this expense</strong>
+                                <input class="form-check-input" type="checkbox" id="split_expense" name="split_expense" onchange="toggleSplitting()">
+                                <label class="form-check-label" for="split_expense">
+                                    <strong>Split this expense across multiple members</strong>
                                 </label>
                             </div>
                         </div>
-                        <div class="card-body" id="sharingOptions" style="display: none;">
-                            <div class="row mb-3">
-                                <div class="col-md-8">
-                                    <label for="shareWith" class="form-label">Share with (Email)</label>
-                                    <input type="email" class="form-control" id="shareWith" name="share_with" placeholder="friend@example.com">
+                        <div class="card-body" id="splittingOptions" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Select members to split with:</label>
+                                <div class="mb-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="selectAllMembers()">Select All</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllMembers()">Clear All</button>
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="shareAmount" class="form-label">Their Share ($)</label>
-                                    <input type="number" class="form-control" id="shareAmount" name="share_amount" step="0.01" placeholder="0.00">
+                                <div class="row" id="memberSelection">
+                                    {% for member in all_group_members %}
+                                    <div class="col-md-6 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input member-checkbox" type="checkbox" 
+                                                   id="member_{{ member.id }}" 
+                                                   name="split_members" 
+                                                   value="{{ member.id }}"
+                                                   data-email="{{ member.email }}"
+                                                   data-username="{{ member.username }}"
+                                                   onchange="updateSplitCalculation()">
+                                            <label class="form-check-label" for="member_{{ member.id }}">
+                                                {% if member.id == current_user.id %}
+                                                    <strong>You ({{ member.username }})</strong>
+                                                {% else %}
+                                                    {{ member.username }}
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
                                 </div>
                             </div>
+                            
                             <div class="row">
                                 <div class="col-md-6">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="equalSplit()">
-                                        Equal Split (50/50)
-                                    </button>
+                                    <div class="mb-3">
+                                        <label class="form-label">Split Type</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="split_type" id="equal_split" value="equal" checked onchange="updateSplitCalculation()">
+                                            <label class="form-check-label" for="equal_split">
+                                                Equal Split
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="split_type" id="custom_split" value="custom" onchange="updateSplitCalculation()">
+                                            <label class="form-check-label" for="custom_split">
+                                                Custom Amounts (Coming Soon)
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <small class="text-muted">
-                                        Your share: $<span id="yourShare">0.00</span>
-                                    </small>
+                                    <div class="mb-3">
+                                        <label class="form-label">Split Summary</label>
+                                        <div class="card">
+                                            <div class="card-body p-2">
+                                                <div id="splitSummary">
+                                                    <small class="text-muted">Select members to see split calculation</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            
+                            <!-- Hidden inputs for form submission -->
+                            <div id="hiddenSplitInputs"></div>
                         </div>
                     </div>
                     
-                    <div class="d-grid gap-2">
+                    <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">Add Expense</button>
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">Group Members ({{ all_group_members|length }})</h6>
+                <div class="row">
+                    {% for member in all_group_members %}
+                    <div class="col-md-6">
+                        {% if member.id == current_user.id %}
+                            <span class="badge bg-primary me-2">You</span>
+                            {{ member.username }} ({{ member.email }})
+                        {% else %}
+                            <span class="badge bg-secondary me-2">Member</span>
+                            {{ member.username }} ({{ member.email }})
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function toggleSharing() {
-    const checkbox = document.getElementById('shareExpense');
-    const options = document.getElementById('sharingOptions');
+function toggleSplitting() {
+    const checkbox = document.getElementById('split_expense');
+    const options = document.getElementById('splittingOptions');
     
     if (checkbox.checked) {
         options.style.display = 'block';
-        calculateSplit();
+        updateSplitCalculation();
     } else {
         options.style.display = 'none';
-        document.getElementById('shareWith').value = '';
-        document.getElementById('shareAmount').value = '';
-        document.getElementById('yourShare').textContent = '0.00';
+        // Clear splitting fields
+        const checkboxes = document.querySelectorAll('.member-checkbox');
+        checkboxes.forEach(cb => cb.checked = false);
+        document.getElementById('splitSummary').innerHTML = '<small class="text-muted">Select members to see split calculation</small>';
+        document.getElementById('hiddenSplitInputs').innerHTML = '';
     }
 }
 
-function equalSplit() {
+function updateSplitCalculation() {
+    const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
+    const splitSummary = document.getElementById('splitSummary');
+    const hiddenInputs = document.getElementById('hiddenSplitInputs');
     const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
-    const halfAmount = (totalAmount / 2).toFixed(2);
     
-    document.getElementById('shareAmount').value = halfAmount;
-    document.getElementById('yourShare').textContent = halfAmount;
+    // Clear previous hidden inputs
+    hiddenInputs.innerHTML = '';
+    
+    if (selectedMembers.length === 0 || totalAmount === 0) {
+        splitSummary.innerHTML = '<small class="text-muted">Select members and enter amount to see split calculation</small>';
+        return;
+    }
+    
+    const splitType = document.querySelector('input[name="split_type"]:checked').value;
+    
+    if (splitType === 'equal') {
+        const amountPerPerson = totalAmount / selectedMembers.length;
+        
+        // Create summary display
+        let summaryHTML = `
+            <strong>Total: $${totalAmount.toFixed(2)}</strong><br>
+            <strong>Split among ${selectedMembers.length} members:</strong><br>
+            <small>Each person pays: $${amountPerPerson.toFixed(2)}</small><br><br>
+        `;
+        
+        // Add each member's share to the summary and create hidden inputs
+        selectedMembers.forEach((member, index) => {
+            const memberId = member.value;
+            const memberEmail = member.getAttribute('data-email');
+            const memberUsername = member.getAttribute('data-username');
+            
+            summaryHTML += `<div class="d-flex justify-content-between">
+                <span>${memberUsername}:</span>
+                <span>$${amountPerPerson.toFixed(2)}</span>
+            </div>`;
+            
+            // Create hidden inputs for form submission
+            hiddenInputs.innerHTML += `
+                <input type="hidden" name="split_member_${index}" value="${memberId}">
+                <input type="hidden" name="split_email_${index}" value="${memberEmail}">
+                <input type="hidden" name="split_amount_${index}" value="${amountPerPerson.toFixed(2)}">
+            `;
+        });
+        
+        // Add total count for backend processing
+        hiddenInputs.innerHTML += `<input type="hidden" name="split_count" value="${selectedMembers.length}">`;
+        
+        splitSummary.innerHTML = summaryHTML;
+    } else {
+        splitSummary.innerHTML = '<small class="text-muted">Custom split coming soon</small>';
+    }
 }
 
-function calculateSplit() {
-    const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
-    const shareAmount = parseFloat(document.getElementById('shareAmount').value) || 0;
-    const yourShare = (totalAmount - shareAmount).toFixed(2);
-    
-    document.getElementById('yourShare').textContent = yourShare;
+// Quick select buttons
+function selectAllMembers() {
+    const checkboxes = document.querySelectorAll('.member-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+    updateSplitCalculation();
 }
 
-// Update your share when share amount changes
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('shareAmount').addEventListener('input', calculateSplit);
-});
+function clearAllMembers() {
+    const checkboxes = document.querySelectorAll('.member-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    updateSplitCalculation();
+}
+
+// Update split calculation when amount changes
+document.getElementById('amount').addEventListener('input', updateSplitCalculation);
 </script>
 {% endblock %} 

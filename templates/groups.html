@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Your Groups</h5>
+                <a href="{{ url_for('create_group') }}" class="btn btn-primary btn-sm">Create New Group</a>
+            </div>
+            <div class="card-body">
+                {% if user_groups %}
+                    <div class="list-group">
+                        {% for group in user_groups %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ group.name }}</h6>
+                                <p class="mb-1 text-muted">{{ group.description or 'No description' }}</p>
+                                <small class="text-muted">Created: {{ group.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-outline-primary btn-sm">
+                                    View Expenses
+                                </a>
+                                {% if group.created_by == current_user.id %}
+                                    <a href="{{ url_for('manage_group', group_id=group.id) }}" class="btn btn-outline-secondary btn-sm">
+                                        Manage
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <h5 class="text-muted">No Groups Yet</h5>
+                        <p class="text-muted">Create your first group to start tracking expenses with others.</p>
+                        <a href="{{ url_for('create_group') }}" class="btn btn-primary">Create Your First Group</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Join a Group</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Ask a group admin to add you to their group using your email address:</p>
+                <div class="alert alert-info">
+                    <strong>Your Email:</strong><br>
+                    {{ current_user.email }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

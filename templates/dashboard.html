@@ -2,164 +2,289 @@
 
 {% block content %}
 <div class="row">
+    <!-- Left Sidebar -->
     <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Total Expenses</h5>
-                <h2 class="text-primary">${{ "%.2f"|format(total_expenses) }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">You Owe</h5>
-                <h2 class="text-danger">${{ "%.2f"|format(total_owed_by_you) }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Others Owe You</h5>
-                <h2 class="text-success">${{ "%.2f"|format(total_owed_to_you) }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Pending Payments</h5>
-                <h2 class="text-warning">${{ "%.2f"|format(total_pending) }}</h2>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Expenses</h5>
-                <a href="{{ url_for('add_expense') }}" class="btn btn-primary btn-sm">Add Expense</a>
+                <h6 class="mb-0">Your Groups</h6>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#groupsList" aria-expanded="true">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Category</th>
-                                <th>Total Amount</th>
-                                <th>Your Share</th>
-                                <th>Shared With</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for expense in expenses %}
-                            <tr>
-                                <td>{{ expense.date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ expense.description }}</td>
-                                <td>{{ expense.category }}</td>
-                                <td>${{ "%.2f"|format(expense.amount) }}</td>
-                                <td>
-                                    {% set shared_amount = 0 %}
-                                    {% for share in expense.shared_with %}
-                                        {% set shared_amount = shared_amount + share.amount %}
-                                    {% endfor %}
-                                    ${{ "%.2f"|format(expense.amount - shared_amount) }}
-                                </td>
-                                <td>
-                                    {% if expense.shared_with %}
-                                        {% for share in expense.shared_with %}
-                                            <span class="badge bg-info me-1">
-                                                {{ share.user.username }}: ${{ "%.2f"|format(share.amount) }}
-                                            </span>
-                                        {% endfor %}
-                                    {% else %}
-                                        <span class="badge bg-secondary">Not shared</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="editExpense({{ expense.id }}, '{{ expense.description }}', {{ expense.amount }}, '{{ expense.category }}')" title="Edit">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense({{ expense.id }})" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                        {% if not expense.shared_with %}
-                                            <button class="btn btn-sm btn-outline-success" onclick="shareExpense({{ expense.id }})" title="Share">
-                                                <i class="bi bi-share"></i>
-                                            </button>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <div class="collapse show" id="groupsList">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for group in user_groups %}
+                        <a href="{{ url_for('dashboard', group_id=group.id) }}" 
+                           class="list-group-item list-group-item-action {% if current_group and group.id == current_group.id %}active{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ group.name }}</h6>
+                                {% if group.created_by == current_user.id %}
+                                    <small class="text-muted">Admin</small>
+                                {% endif %}
+                            </div>
+                            <p class="mb-1 small text-muted">{{ group.description or 'No description' }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('create_group') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-circle"></i> Create Group
+                            </a>
+                            <a href="{{ url_for('groups') }}" class="btn btn-outline-secondary btn-sm">
+                                Manage Groups
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-{% if shared_expenses %}
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
+        
+        {% if current_group and is_admin %}
+        <div class="card mt-3">
             <div class="card-header">
-                <h5 class="mb-0">Expenses Shared With You</h5>
+                <h6 class="mb-0">Group Admin</h6>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Paid By</th>
-                                <th>Your Share</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for share in shared_expenses %}
-                            <tr>
-                                <td>{{ share.expense.date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ share.expense.description }}</td>
-                                <td>{{ share.expense.user.username }}</td>
-                                <td>${{ "%.2f"|format(share.amount) }}</td>
-                                <td>
-                                    {% if share.status == 'pending' %}
-                                        <span class="badge bg-warning">Pending</span>
-                                    {% elif share.status == 'paid' %}
-                                        <span class="badge bg-success">Paid</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">{{ share.status }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if share.status == 'pending' %}
-                                        <button class="btn btn-sm btn-success" onclick="markAsPaid({{ share.id }})">
-                                            Mark as Paid
-                                        </button>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('manage_group', group_id=current_group.id) }}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-gear"></i> Manage Members
+                    </a>
                 </div>
             </div>
         </div>
+        {% endif %}
+    </div>
+    
+    <!-- Main Content -->
+    <div class="col-md-9">
+        {% if current_group %}
+        <!-- Group Header -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1">{{ current_group.name }}</h4>
+                        <p class="text-muted mb-0">{{ current_group.description or 'No description' }}</p>
+                    </div>
+                    <div>
+                        <span class="badge bg-info">{{ current_group.members|length }} members</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Paid by You</h5>
+                        <h2 class="text-primary">${{ "%.2f"|format(total_paid_by_you) }}</h2>
+                        <small class="text-muted">Amount you actually paid</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">You Owe</h5>
+                        <h2 class="text-danger">${{ "%.2f"|format(total_owed_by_you) }}</h2>
+                        <small class="text-muted">Amount you owe to others</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Others Owe You</h5>
+                        <h2 class="text-success">${{ "%.2f"|format(total_owed_to_you) }}</h2>
+                        <small class="text-muted">Amount others owe you</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Net Balance</h5>
+                        {% if net_balance > 0 %}
+                            <h2 class="text-danger">-${{ "%.2f"|format(net_balance) }}</h2>
+                            <small class="text-muted">You owe overall</small>
+                        {% elif net_balance < 0 %}
+                            <h2 class="text-success">+${{ "%.2f"|format(-net_balance) }}</h2>
+                            <small class="text-muted">You are owed overall</small>
+                        {% else %}
+                            <h2 class="text-muted">$0.00</h2>
+                            <small class="text-muted">All settled</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses Table -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Expenses</h5>
+                        <a href="{{ url_for('add_expense', group_id=current_group.id) }}" class="btn btn-primary btn-sm">Add Expense</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Category</th>
+                                        <th>Total Amount</th>
+                                        <th>Paid by</th>
+                                        <th>Your Share</th>
+                                        <th>Shared With</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for expense in expenses %}
+                                    <tr>
+                                        <td>{{ expense.date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ expense.description }}</td>
+                                        <td>{{ expense.category }}</td>
+                                        <td>${{ "%.2f"|format(expense.amount) }}</td>
+                                        <td>
+                                            {% if expense.paid_by == current_user.id %}
+                                                <span class="badge bg-primary">You</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Other Member</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            ${{ "%.2f"|format(expense.user_share) }}
+                                        </td>
+                                        <td>
+                                            {% if expense.shared_with %}
+                                                {% for share in expense.shared_with %}
+                                                    <span class="badge bg-info me-1">
+                                                        {% if share.user %}
+                                                            {{ share.user.username }}: ${{ "%.2f"|format(share.amount) }}
+                                                        {% else %}
+                                                            User ID {{ share.user_id }}: ${{ "%.2f"|format(share.amount) }}
+                                                        {% endif %}
+                                                    </span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">Not shared</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-outline-primary edit-expense-btn" 
+                                                        data-expense-id="{{ expense.id }}" 
+                                                        data-description="{{ expense.description }}" 
+                                                        data-amount="{{ expense.amount }}" 
+                                                        data-category="{{ expense.category }}" 
+                                                        title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-expense-btn" 
+                                                        data-expense-id="{{ expense.id }}" 
+                                                        title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                                {% if not expense.shared_with %}
+                                                    <button class="btn btn-sm btn-outline-success share-expense-btn" 
+                                                            data-expense-id="{{ expense.id }}" 
+                                                            title="Share">
+                                                        <i class="bi bi-share"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if shared_expenses %}
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Expenses Shared With You</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Paid By</th>
+                                        <th>Your Share</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for share in shared_expenses %}
+                                    <tr>
+                                        <td>{{ share.expense.date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ share.expense.description }}</td>
+                                        <td>
+                                            {% if share.expense.creator %}
+                                                {{ share.expense.creator.username }}
+                                            {% else %}
+                                                Creator ID: {{ share.expense.user_id }}
+                                            {% endif %}
+                                        </td>
+                                        <td>${{ "%.2f"|format(share.amount) }}</td>
+                                        <td>
+                                            {% if share.status == 'pending' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% elif share.status == 'paid' %}
+                                                <span class="badge bg-success">Paid</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ share.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if share.status == 'pending' %}
+                                                <button class="btn btn-sm btn-success mark-paid-btn" 
+                                                        data-share-id="{{ share.id }}">
+                                                    Mark as Paid
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <!-- No Group Selected -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h5 class="text-muted">No Group Selected</h5>
+                <p class="text-muted">Please select a group from the sidebar or create a new one to start tracking expenses.</p>
+                <a href="{{ url_for('create_group') }}" class="btn btn-primary">Create Your First Group</a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
-{% endif %}
 
 <!-- Share Expense Modal -->
 <div class="modal fade" id="shareExpenseModal" tabindex="-1">
@@ -237,27 +362,67 @@
 </div>
 
 <script>
-function shareExpense(expenseId) {
-    document.getElementById('expenseId').value = expenseId;
-    new bootstrap.Modal(document.getElementById('shareExpenseModal')).show();
-}
+// Handle share expense buttons
+document.querySelectorAll('.share-expense-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const expenseId = this.dataset.expenseId;
+        document.getElementById('expenseId').value = expenseId;
+        new bootstrap.Modal(document.getElementById('shareExpenseModal')).show();
+    });
+});
 
-function editExpense(expenseId, description, amount, category) {
-    document.getElementById('editExpenseId').value = expenseId;
-    document.getElementById('editDescription').value = description;
-    document.getElementById('editAmount').value = amount;
-    document.getElementById('editCategory').value = category;
-    new bootstrap.Modal(document.getElementById('editExpenseModal')).show();
-}
+// Handle edit expense buttons
+document.querySelectorAll('.edit-expense-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const expenseId = this.dataset.expenseId;
+        const description = this.dataset.description;
+        const amount = this.dataset.amount;
+        const category = this.dataset.category;
+        
+        document.getElementById('editExpenseId').value = expenseId;
+        document.getElementById('editDescription').value = description;
+        document.getElementById('editAmount').value = amount;
+        document.getElementById('editCategory').value = category;
+        new bootstrap.Modal(document.getElementById('editExpenseModal')).show();
+    });
+});
 
-function deleteExpense(expenseId) {
-    if (confirm('Are you sure you want to delete this expense?')) {
-        fetch('/delete_expense', {
+// Handle delete expense buttons
+document.querySelectorAll('.delete-expense-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const expenseId = this.dataset.expenseId;
+        
+        if (confirm('Are you sure you want to delete this expense?')) {
+            fetch('/delete_expense', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({expense_id: parseInt(expenseId)})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    });
+});
+
+// Handle mark as paid buttons
+document.querySelectorAll('.mark-paid-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const shareId = this.dataset.shareId;
+        
+        fetch('/mark_paid', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({expense_id: expenseId})
+            body: JSON.stringify({share_id: parseInt(shareId)})
         })
         .then(response => response.json())
         .then(data => {
@@ -267,8 +432,8 @@ function deleteExpense(expenseId) {
                 alert(data.message);
             }
         });
-    }
-}
+    });
+});
 
 function submitShare() {
     const form = document.getElementById('shareExpenseForm');
@@ -295,24 +460,6 @@ function submitEdit() {
     fetch('/edit_expense', {
         method: 'POST',
         body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    });
-}
-
-function markAsPaid(shareId) {
-    fetch('/mark_paid', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({share_id: shareId})
     })
     .then(response => response.json())
     .then(data => {

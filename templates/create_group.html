@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Create New Group</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Group Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <div class="form-text">Choose a descriptive name for your group.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="e.g., House expenses with roommates, Trip to Europe 2024"></textarea>
+                        <div class="form-text">Add a brief description to help identify this group.</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Create Group</button>
+                        <a href="{{ url_for('groups') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">What happens next?</h6>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check-circle text-success"></i> You'll be the group admin</li>
+                    <li><i class="bi bi-check-circle text-success"></i> You can add members by their email</li>
+                    <li><i class="bi bi-check-circle text-success"></i> All expenses will be tracked within this group</li>
+                    <li><i class="bi bi-check-circle text-success"></i> You can manage members and delete the group</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
