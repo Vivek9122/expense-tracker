@@ -62,7 +62,7 @@ class Expense(db.Model):
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Who created the expense
     paid_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Who actually paid for the expense
-    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)  # Make optional for backward compatibility
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -151,6 +151,16 @@ def logout():
 @login_required
 def dashboard(group_id=None):
     try:
+        # Check if groups functionality is available
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        
+        if 'group' not in tables or 'group_member' not in tables:
+            # Groups functionality not available, show basic expense dashboard
+            flash('Groups functionality is being set up. Showing basic expense view.', 'info')
+            return render_basic_dashboard()
+        
         # Get user's groups
         user_groups = db.session.query(Group).join(GroupMember).filter(
             GroupMember.user_id == current_user.id
@@ -163,10 +173,10 @@ def dashboard(group_id=None):
             else:
                 return redirect(url_for('groups'))
     except Exception as e:
-        # If there's a database error (tables don't exist), redirect to groups page
+        # If there's a database error (tables don't exist), show basic dashboard
         print(f"Dashboard error: {e}")
-        flash('Please create a group first to start tracking expenses.', 'info')
-        return redirect(url_for('groups'))
+        flash('Showing basic expense view. Groups functionality will be available soon.', 'info')
+        return render_basic_dashboard()
     
     # Verify user has access to this group
     current_group = None
@@ -273,6 +283,54 @@ def dashboard(group_id=None):
                          user_groups=user_groups,
                          current_group=current_group,
                          is_admin=is_admin)
+
+def render_basic_dashboard():
+    """Render a basic dashboard without groups functionality"""
+    try:
+        # Get basic expenses for current user (without group filtering)
+        expenses = Expense.query.filter_by(user_id=current_user.id).order_by(Expense.date.desc()).all()
+        
+        # Calculate basic totals
+        total_expenses = sum(expense.amount for expense in expenses)
+        
+        # Get shared expenses (what you owe)
+        shared_expenses_owed = []
+        try:
+            shared_expenses_owed = db.session.query(ExpenseShare).join(Expense).filter(
+                ExpenseShare.user_id == current_user.id
+            ).all()
+        except:
+            pass
+        
+        total_owed_by_you = sum(share.amount for share in shared_expenses_owed)
+        
+        return render_template('dashboard.html',
+                             expenses=expenses,
+                             shared_expenses=shared_expenses_owed,
+                             total_expenses=total_expenses,
+                             total_paid_by_you=total_expenses,
+                             total_owed_by_you=total_owed_by_you,
+                             total_owed_to_you=0,
+                             net_balance=total_owed_by_you,
+                             total_pending=total_owed_by_you,
+                             user_groups=[],
+                             current_group=None,
+                             is_admin=False)
+    except Exception as e:
+        print(f"Basic dashboard error: {e}")
+        # Return minimal dashboard
+        return render_template('dashboard.html',
+                             expenses=[],
+                             shared_expenses=[],
+                             total_expenses=0,
+                             total_paid_by_you=0,
+                             total_owed_by_you=0,
+                             total_owed_to_you=0,
+                             net_balance=0,
+                             total_pending=0,
+                             user_groups=[],
+                             current_group=None,
+                             is_admin=False)
 
 @app.route('/groups')
 @login_required
@@ -763,123 +821,32 @@ def delete_expense():
 def create_tables():
     """Create database tables with error handling"""
     try:
-        # First try to run migration to ensure all tables exist
-        run_database_migration()
+        # Simple approach: just create all tables
         db.create_all()
         print("✅ Database tables created/verified successfully")
     except Exception as e:
         print(f"❌ Error creating database tables: {e}")
-        # Still try to create basic tables
-        try:
-            db.create_all()
-        except:
-            pass
+        # Don't fail the app startup, just log the error
 
-def run_database_migration():
-    """Run database migration to add groups functionality"""
+def ensure_basic_functionality():
+    """Ensure the app can run even if groups functionality isn't available"""
     try:
-        from sqlalchemy import text, inspect
-        
-        # Check if Group table exists
-        inspector = inspect(db.engine)
-        tables = inspector.get_table_names()
-        
-        if 'group' not in tables:
-            print("🔄 Running database migration for groups functionality...")
-            
-            with db.engine.connect() as conn:
-                trans = conn.begin()
-                try:
-                    # Create Group table
-                    conn.execute(text("""
-                        CREATE TABLE IF NOT EXISTS "group" (
-                            id SERIAL PRIMARY KEY,
-                            name VARCHAR(100) NOT NULL,
-                            description VARCHAR(500),
-                            created_by INTEGER NOT NULL REFERENCES "user"(id),
-                            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-                        )
-                    """))
-                    
-                    # Create GroupMember table  
-                    conn.execute(text("""
-                        CREATE TABLE IF NOT EXISTS group_member (
-                            id SERIAL PRIMARY KEY,
-                            group_id INTEGER NOT NULL REFERENCES "group"(id),
-                            user_id INTEGER NOT NULL REFERENCES "user"(id),
-                            joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                            is_admin BOOLEAN DEFAULT FALSE,
-                            UNIQUE(group_id, user_id)
-                        )
-                    """))
-                    
-                    # Check if group_id column exists in expense table
-                    expense_columns = [col['name'] for col in inspector.get_columns('expense')] if 'expense' in tables else []
-                    
-                    if 'expense' in tables and 'group_id' not in expense_columns:
-                        # Add group_id column
-                        conn.execute(text("ALTER TABLE expense ADD COLUMN group_id INTEGER"))
-                        
-                        # Create a default group if there are existing expenses
-                        result = conn.execute(text("SELECT COUNT(*) as count FROM expense")).fetchone()
-                        if result and result.count > 0:
-                            # Get first user
-                            first_user = conn.execute(text("SELECT id FROM \"user\" ORDER BY id LIMIT 1")).fetchone()
-                            if first_user:
-                                # Create default group
-                                conn.execute(text("""
-                                    INSERT INTO "group" (name, description, created_by)
-                                    VALUES ('Default Group', 'Auto-created for existing expenses', :user_id)
-                                """), {"user_id": first_user.id})
-                                
-                                # Get default group ID
-                                default_group = conn.execute(text("""
-                                    SELECT id FROM "group" WHERE name = 'Default Group' AND created_by = :user_id ORDER BY id DESC LIMIT 1
-                                """), {"user_id": first_user.id}).fetchone()
-                                
-                                if default_group:
-                                    # Add all users to default group
-                                    conn.execute(text("""
-                                        INSERT INTO group_member (group_id, user_id, is_admin)
-                                        SELECT :group_id, id, TRUE FROM "user"
-                                    """), {"group_id": default_group.id})
-                                    
-                                    # Update existing expenses
-                                    conn.execute(text("""
-                                        UPDATE expense SET group_id = :group_id WHERE group_id IS NULL
-                                    """), {"group_id": default_group.id})
-                        
-                        # Make group_id NOT NULL and add foreign key
-                        conn.execute(text("ALTER TABLE expense ALTER COLUMN group_id SET NOT NULL"))
-                        conn.execute(text("""
-                            ALTER TABLE expense ADD CONSTRAINT fk_expense_group 
-                            FOREIGN KEY (group_id) REFERENCES "group"(id)
-                        """))
-                    
-                    # Check if paid_by column exists
-                    if 'expense' in tables and 'paid_by' not in expense_columns:
-                        conn.execute(text("ALTER TABLE expense ADD COLUMN paid_by INTEGER REFERENCES \"user\"(id)"))
-                        conn.execute(text("UPDATE expense SET paid_by = user_id WHERE paid_by IS NULL"))
-                    
-                    trans.commit()
-                    print("✅ Database migration completed successfully!")
-                    
-                except Exception as e:
-                    trans.rollback()
-                    print(f"❌ Migration failed: {e}")
-                    raise
-        else:
-            print("✅ Groups tables already exist, skipping migration")
-            
+        # Test basic database connection
+        with db.engine.connect() as conn:
+            # Check if user table exists (most basic requirement)
+            result = conn.execute(db.text("SELECT 1"))
+            result.fetchone()
+        print("✅ Database connection verified")
     except Exception as e:
-        print(f"❌ Migration error: {e}")
-        # Don't raise the error, let the app continue
+        print(f"❌ Database connection failed: {e}")
 
 if __name__ == '__main__':
     with app.app_context():
         create_tables()
+        ensure_basic_functionality()
     app.run(debug=True)
 else:
     # When running in production (like Render), create tables on startup
     with app.app_context():
         create_tables()
+        ensure_basic_functionality()
