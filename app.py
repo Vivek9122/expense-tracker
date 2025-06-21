@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 from flask_mail import Mail, Message
+from sqlalchemy import text, inspect
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
@@ -152,7 +153,6 @@ def logout():
 def dashboard(group_id=None):
     try:
         # Check if groups functionality is available
-        from sqlalchemy import inspect
         inspector = inspect(db.engine)
         tables = inspector.get_table_names()
         
@@ -287,32 +287,46 @@ def dashboard(group_id=None):
 def render_basic_dashboard():
     """Render a basic dashboard without groups functionality"""
     try:
-        # Get basic expenses for current user (without group filtering)
-        expenses = Expense.query.filter_by(user_id=current_user.id).order_by(Expense.date.desc()).all()
+        # Get basic expenses for current user (using raw SQL to avoid column issues)
+        from sqlalchemy import text
         
-        # Calculate basic totals
-        total_expenses = sum(expense.amount for expense in expenses)
-        
-        # Get shared expenses (what you owe)
-        shared_expenses_owed = []
-        try:
-            shared_expenses_owed = db.session.query(ExpenseShare).join(Expense).filter(
-                ExpenseShare.user_id == current_user.id
-            ).all()
-        except:
-            pass
-        
-        total_owed_by_you = sum(share.amount for share in shared_expenses_owed)
+        with db.engine.connect() as conn:
+            # Get basic expense data
+            result = conn.execute(text("""
+                SELECT id, amount, description, category, date, user_id 
+                FROM expense 
+                WHERE user_id = :user_id 
+                ORDER BY date DESC
+            """), {"user_id": current_user.id})
+            
+            expenses_data = result.fetchall()
+            
+            # Convert to expense-like objects
+            expenses = []
+            total_expenses = 0
+            for row in expenses_data:
+                expense_obj = type('Expense', (), {
+                    'id': row[0],
+                    'amount': row[1],
+                    'description': row[2],
+                    'category': row[3],
+                    'date': row[4],
+                    'user_id': row[5],
+                    'user_share': row[1],  # For basic view, user pays full amount
+                    'shared_with': []  # No sharing in basic view
+                })()
+                expenses.append(expense_obj)
+                total_expenses += row[1]
         
         return render_template('dashboard.html',
                              expenses=expenses,
-                             shared_expenses=shared_expenses_owed,
+                             shared_expenses=[],
                              total_expenses=total_expenses,
                              total_paid_by_you=total_expenses,
-                             total_owed_by_you=total_owed_by_you,
+                             total_owed_by_you=0,
                              total_owed_to_you=0,
-                             net_balance=total_owed_by_you,
-                             total_pending=total_owed_by_you,
+                             net_balance=0,
+                             total_pending=0,
                              user_groups=[],
                              current_group=None,
                              is_admin=False)
@@ -824,9 +838,48 @@ def create_tables():
         # Simple approach: just create all tables
         db.create_all()
         print("✅ Database tables created/verified successfully")
+        
+        # Run migration to add missing columns
+        migrate_existing_tables()
+        
     except Exception as e:
         print(f"❌ Error creating database tables: {e}")
         # Don't fail the app startup, just log the error
+
+def migrate_existing_tables():
+    """Add missing columns to existing tables"""
+    try:
+        inspector = inspect(db.engine)
+        
+        # Check if expense table exists and what columns it has
+        if 'expense' in inspector.get_table_names():
+            expense_columns = [col['name'] for col in inspector.get_columns('expense')]
+            
+            with db.engine.connect() as conn:
+                trans = conn.begin()
+                try:
+                    # Add paid_by column if it doesn't exist
+                    if 'paid_by' not in expense_columns:
+                        print("Adding paid_by column to expense table...")
+                        conn.execute(text("ALTER TABLE expense ADD COLUMN paid_by INTEGER"))
+                        conn.execute(text("UPDATE expense SET paid_by = user_id WHERE paid_by IS NULL"))
+                        print("✅ Added paid_by column")
+                    
+                    # Add group_id column if it doesn't exist
+                    if 'group_id' not in expense_columns:
+                        print("Adding group_id column to expense table...")
+                        conn.execute(text("ALTER TABLE expense ADD COLUMN group_id INTEGER"))
+                        print("✅ Added group_id column")
+                    
+                    trans.commit()
+                    print("✅ Table migration completed")
+                    
+                except Exception as e:
+                    trans.rollback()
+                    print(f"❌ Migration failed: {e}")
+                    
+    except Exception as e:
+        print(f"❌ Migration error: {e}")
 
 def ensure_basic_functionality():
     """Ensure the app can run even if groups functionality isn't available"""
