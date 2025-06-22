@@ -9,7 +9,7 @@
                 <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
             </div>
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" id="expenseForm">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -44,7 +44,7 @@
                         </div>
                     </div>
                     
-                    <!-- NEW: Paid by dropdown -->
+                    <!-- Paid by dropdown -->
                     <div class="mb-3">
                         <label for="paid_by" class="form-label">Paid by</label>
                         <select class="form-select" id="paid_by" name="paid_by" required>
@@ -61,72 +61,66 @@
                         <div class="form-text">Select who actually paid for this expense.</div>
                     </div>
                     
-                    <!-- Multiple Member Splitting Section -->
+                    <!-- NEW: Improved Member Selection with Dynamic Amounts -->
                     <div class="card mt-4">
                         <div class="card-header">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="split_expense" name="split_expense" onchange="toggleSplitting()">
-                                <label class="form-check-label" for="split_expense">
-                                    <strong>Split this expense across multiple members</strong>
-                                </label>
-                            </div>
+                            <h6 class="mb-0">Split with:</h6>
                         </div>
-                        <div class="card-body" id="splittingOptions" style="display: none;">
-                            <div class="mb-3">
-                                <label class="form-label">Select members to split with:</label>
-                                <div class="mb-2">
-                                    <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="selectAllMembers()">Select All</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllMembers()">Clear All</button>
-                                </div>
-                                <div class="row" id="memberSelection">
-                                    {% for member in all_group_members %}
-                                    <div class="col-md-6 mb-2">
-                                        <div class="form-check">
-                                            <input class="form-check-input member-checkbox" type="checkbox" 
-                                                   id="member_{{ member.id }}" 
-                                                   name="split_members" 
-                                                   value="{{ member.id }}"
-                                                   data-email="{{ member.email }}"
-                                                   data-username="{{ member.username }}"
-                                                   onchange="updateSplitCalculation()">
-                                            <label class="form-check-label" for="member_{{ member.id }}">
-                                                {% if member.id == current_user.id %}
-                                                    <strong>You ({{ member.username }})</strong>
-                                                {% else %}
-                                                    {{ member.username }}
-                                                {% endif %}
-                                            </label>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            
+                        <div class="card-body">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Split Type</label>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="split_type" id="equal_split" value="equal" checked onchange="updateSplitCalculation()">
-                                            <label class="form-check-label" for="equal_split">
-                                                Equal Split
-                                            </label>
+                                <div class="col-md-8">
+                                    <div id="membersList">
+                                        {% for member in all_group_members %}
+                                        <div class="row align-items-center mb-2 member-row" data-member-id="{{ member.id }}" data-member-email="{{ member.email }}" data-member-username="{{ member.username }}">
+                                            <div class="col-md-1">
+                                                <div class="form-check">
+                                                    <input class="form-check-input member-checkbox" 
+                                                           type="checkbox" 
+                                                           id="member_{{ member.id }}" 
+                                                           value="{{ member.id }}"
+                                                           onchange="updateSplitCalculation()">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-check-label member-name" for="member_{{ member.id }}">
+                                                    {% if member.id == current_user.id %}
+                                                        <strong>You ({{ member.username }})</strong>
+                                                    {% else %}
+                                                        {{ member.username }}
+                                                    {% endif %}
+                                                </label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="number" 
+                                                           class="form-control member-amount" 
+                                                           id="amount_{{ member.id }}"
+                                                           step="0.01" 
+                                                           min="0"
+                                                           placeholder="0.00"
+                                                           disabled
+                                                           onchange="validateSplitBalance()">
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="split_type" id="custom_split" value="custom" onchange="updateSplitCalculation()">
-                                            <label class="form-check-label" for="custom_split">
-                                                Custom Amounts (Coming Soon)
-                                            </label>
-                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="selectAllMembers()">Select All</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="clearAllMembers()">Clear All</button>
+                                        <button type="button" class="btn btn-outline-success btn-sm" onclick="splitEqually()">Split Equally</button>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Split Summary</label>
-                                        <div class="card">
-                                            <div class="card-body p-2">
-                                                <div id="splitSummary">
-                                                    <small class="text-muted">Select members to see split calculation</small>
+                                
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title">Split Summary</h6>
+                                            <div id="splitStatus">
+                                                <div class="text-muted">
+                                                    <small>Select members to see calculation</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -140,7 +134,7 @@
                     </div>
                     
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">Add Expense</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Add Expense</button>
                         <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
@@ -169,91 +163,266 @@
 </div>
 
 <script>
-function toggleSplitting() {
-    const checkbox = document.getElementById('split_expense');
-    const options = document.getElementById('splittingOptions');
-    
-    if (checkbox.checked) {
-        options.style.display = 'block';
-        updateSplitCalculation();
-    } else {
-        options.style.display = 'none';
-        // Clear splitting fields
-        const checkboxes = document.querySelectorAll('.member-checkbox');
-        checkboxes.forEach(cb => cb.checked = false);
-        document.getElementById('splitSummary').innerHTML = '<small class="text-muted">Select members to see split calculation</small>';
-        document.getElementById('hiddenSplitInputs').innerHTML = '';
-    }
-}
+let isUpdating = false; // Prevent infinite loops during updates
 
 function updateSplitCalculation() {
+    if (isUpdating) return;
+    
     const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
-    const splitSummary = document.getElementById('splitSummary');
-    const hiddenInputs = document.getElementById('hiddenSplitInputs');
     const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
     
-    // Clear previous hidden inputs
-    hiddenInputs.innerHTML = '';
-    
     if (selectedMembers.length === 0 || totalAmount === 0) {
-        splitSummary.innerHTML = '<small class="text-muted">Select members and enter amount to see split calculation</small>';
+        // Clear all amounts and disable inputs
+        document.querySelectorAll('.member-amount').forEach(input => {
+            input.value = '';
+            input.disabled = true;
+        });
+        updateSplitStatus('Select members and enter amount', 'muted');
         return;
     }
     
-    const splitType = document.querySelector('input[name="split_type"]:checked').value;
+    // Enable amount inputs for selected members
+    selectedMembers.forEach(checkbox => {
+        const memberId = checkbox.value;
+        const amountInput = document.getElementById(`amount_${memberId}`);
+        amountInput.disabled = false;
+    });
     
-    if (splitType === 'equal') {
-        const amountPerPerson = totalAmount / selectedMembers.length;
+    // Disable amount inputs for unselected members
+    document.querySelectorAll('.member-checkbox:not(:checked)').forEach(checkbox => {
+        const memberId = checkbox.value;
+        const amountInput = document.getElementById(`amount_${memberId}`);
+        amountInput.disabled = true;
+        amountInput.value = '';
+    });
+    
+    // Auto-calculate equal split
+    splitEqually();
+}
+
+function splitEqually() {
+    const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
+    const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
+    
+    if (selectedMembers.length === 0 || totalAmount === 0) return;
+    
+    isUpdating = true;
+    const amountPerPerson = totalAmount / selectedMembers.length;
+    
+    selectedMembers.forEach(checkbox => {
+        const memberId = checkbox.value;
+        const amountInput = document.getElementById(`amount_${memberId}`);
+        amountInput.value = amountPerPerson.toFixed(2);
+    });
+    
+    isUpdating = false;
+    validateSplitBalance();
+}
+
+function validateSplitBalance() {
+    const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
+    const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
+    
+    if (selectedMembers.length === 0) {
+        updateSplitStatus('No members selected for splitting', 'muted');
+        enableSubmitButton(true); // Enable for regular expenses
+        return;
+    }
+    
+    let totalAllocated = 0;
+    let memberDetails = [];
+    
+    selectedMembers.forEach(checkbox => {
+        const memberId = checkbox.value;
+        const memberRow = checkbox.closest('.member-row');
+        const memberName = memberRow.getAttribute('data-member-username');
+        const amountInput = document.getElementById(`amount_${memberId}`);
+        const amount = parseFloat(amountInput.value) || 0;
         
-        // Create summary display
-        let summaryHTML = `
-            <strong>Total: $${totalAmount.toFixed(2)}</strong><br>
-            <strong>Split among ${selectedMembers.length} members:</strong><br>
-            <small>Each person pays: $${amountPerPerson.toFixed(2)}</small><br><br>
+        totalAllocated += amount;
+        memberDetails.push({ name: memberName, amount: amount });
+    });
+    
+    const difference = totalAmount - totalAllocated;
+    
+    // Update hidden inputs for form submission
+    updateHiddenInputs(selectedMembers);
+    
+    // Update status display
+    if (Math.abs(difference) < 0.01) { // Account for floating point precision
+        let statusHTML = `
+            <div class="text-success">
+                <strong>✅ Balanced</strong><br>
+                <small>Total: $${totalAmount.toFixed(2)}</small>
+            </div>
+            <hr class="my-2">
+            <div class="small">
         `;
         
-        // Add each member's share to the summary and create hidden inputs
-        selectedMembers.forEach((member, index) => {
-            const memberId = member.value;
-            const memberEmail = member.getAttribute('data-email');
-            const memberUsername = member.getAttribute('data-username');
-            
-            summaryHTML += `<div class="d-flex justify-content-between">
-                <span>${memberUsername}:</span>
-                <span>$${amountPerPerson.toFixed(2)}</span>
-            </div>`;
-            
-            // Create hidden inputs for form submission
-            hiddenInputs.innerHTML += `
-                <input type="hidden" name="split_member_${index}" value="${memberId}">
-                <input type="hidden" name="split_email_${index}" value="${memberEmail}">
-                <input type="hidden" name="split_amount_${index}" value="${amountPerPerson.toFixed(2)}">
+        memberDetails.forEach(member => {
+            statusHTML += `
+                <div class="d-flex justify-content-between">
+                    <span>${member.name}:</span>
+                    <span>$${member.amount.toFixed(2)}</span>
+                </div>
             `;
         });
         
-        // Add total count for backend processing
-        hiddenInputs.innerHTML += `<input type="hidden" name="split_count" value="${selectedMembers.length}">`;
-        
-        splitSummary.innerHTML = summaryHTML;
+        statusHTML += '</div>';
+        updateSplitStatus(statusHTML, 'success');
+        enableSubmitButton(true);
+    } else if (difference > 0) {
+        updateSplitStatus(`
+            <div class="text-warning">
+                <strong>⚠️ Unaccounted</strong><br>
+                <small>Remaining: $${difference.toFixed(2)}</small>
+            </div>
+        `, 'warning');
+        enableSubmitButton(false);
     } else {
-        splitSummary.innerHTML = '<small class="text-muted">Custom split coming soon</small>';
+        updateSplitStatus(`
+            <div class="text-danger">
+                <strong>❌ Over by</strong><br>
+                <small>Excess: $${Math.abs(difference).toFixed(2)}</small>
+            </div>
+        `, 'danger');
+        enableSubmitButton(false);
     }
 }
 
-// Quick select buttons
+function updateSplitStatus(html, type) {
+    const statusDiv = document.getElementById('splitStatus');
+    statusDiv.innerHTML = html;
+    
+    // Update card styling based on status
+    const card = statusDiv.closest('.card');
+    card.className = 'card bg-light';
+    if (type === 'success') card.className = 'card bg-success bg-opacity-10 border-success';
+    else if (type === 'warning') card.className = 'card bg-warning bg-opacity-10 border-warning';
+    else if (type === 'danger') card.className = 'card bg-danger bg-opacity-10 border-danger';
+}
+
+function enableSubmitButton(enable) {
+    const submitBtn = document.getElementById('submitBtn');
+    const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
+    
+    // Always enable if no members are selected (regular expense without splitting)
+    if (selectedMembers.length === 0) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Expense';
+        submitBtn.className = 'btn btn-primary';
+        return;
+    }
+    
+    // For split expenses, check balance
+    submitBtn.disabled = !enable;
+    
+    if (enable) {
+        submitBtn.textContent = 'Add Expense';
+        submitBtn.className = 'btn btn-primary';
+    } else {
+        submitBtn.textContent = 'Balance amounts to continue';
+        submitBtn.className = 'btn btn-secondary';
+    }
+}
+
+function updateHiddenInputs(selectedMembers) {
+    const hiddenInputs = document.getElementById('hiddenSplitInputs');
+    hiddenInputs.innerHTML = '';
+    
+    if (selectedMembers.length === 0) return;
+    
+    // Add split_expense flag
+    hiddenInputs.innerHTML += '<input type="hidden" name="split_expense" value="1">';
+    hiddenInputs.innerHTML += `<input type="hidden" name="split_count" value="${selectedMembers.length}">`;
+    
+    selectedMembers.forEach((checkbox, index) => {
+        const memberId = checkbox.value;
+        const memberRow = checkbox.closest('.member-row');
+        const memberEmail = memberRow.getAttribute('data-member-email');
+        const amountInput = document.getElementById(`amount_${memberId}`);
+        const amount = parseFloat(amountInput.value) || 0;
+        
+        hiddenInputs.innerHTML += `
+            <input type="hidden" name="split_member_${index}" value="${memberId}">
+            <input type="hidden" name="split_email_${index}" value="${memberEmail}">
+            <input type="hidden" name="split_amount_${index}" value="${amount.toFixed(2)}">
+        `;
+    });
+}
+
+// Quick action functions
 function selectAllMembers() {
-    const checkboxes = document.querySelectorAll('.member-checkbox');
-    checkboxes.forEach(cb => cb.checked = true);
+    document.querySelectorAll('.member-checkbox').forEach(cb => cb.checked = true);
     updateSplitCalculation();
 }
 
 function clearAllMembers() {
-    const checkboxes = document.querySelectorAll('.member-checkbox');
-    checkboxes.forEach(cb => cb.checked = false);
+    document.querySelectorAll('.member-checkbox').forEach(cb => cb.checked = false);
     updateSplitCalculation();
 }
 
-// Update split calculation when amount changes
-document.getElementById('amount').addEventListener('input', updateSplitCalculation);
+// Event listeners
+document.getElementById('amount').addEventListener('input', function() {
+    if (document.querySelectorAll('.member-checkbox:checked').length > 0) {
+        splitEqually();
+    }
+});
+
+// Add event listeners to all amount inputs
+document.querySelectorAll('.member-amount').forEach(input => {
+    input.addEventListener('input', validateSplitBalance);
+});
+
+// Form validation before submission
+document.getElementById('expenseForm').addEventListener('submit', function(e) {
+    const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
+    
+    if (selectedMembers.length > 0) {
+        const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
+        let totalAllocated = 0;
+        
+        selectedMembers.forEach(checkbox => {
+            const memberId = checkbox.value;
+            const amountInput = document.getElementById(`amount_${memberId}`);
+            totalAllocated += parseFloat(amountInput.value) || 0;
+        });
+        
+        const difference = Math.abs(totalAmount - totalAllocated);
+        if (difference >= 0.01) {
+            e.preventDefault();
+            alert('Please balance the split amounts before submitting.');
+            return false;
+        }
+    }
+    
+    return true;
+});
+
+// Initialize
+enableSubmitButton(true); // Enable by default for expenses without splitting
 </script>
+
+<style>
+.member-row {
+    transition: background-color 0.2s ease;
+}
+
+.member-row:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    border-radius: 4px;
+}
+
+.member-checkbox:checked + .member-name {
+    font-weight: bold;
+}
+
+.form-control:disabled {
+    background-color: #f8f9fa;
+}
+
+#splitStatus {
+    min-height: 80px;
+}
+</style>
 {% endblock %} 
