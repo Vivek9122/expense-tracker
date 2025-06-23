@@ -109,10 +109,10 @@
                     <div class="card-body">
                         <h5 class="card-title">Net Balance</h5>
                         {% if net_balance > 0 %}
-                            <h2 class="text-danger">-${{ "%.2f"|format(net_balance) }}</h2>
+                            <h2 class="text-danger">${{ "%.2f"|format(net_balance) }}</h2>
                             <small class="text-muted">You owe overall</small>
                         {% elif net_balance < 0 %}
-                            <h2 class="text-success">+${{ "%.2f"|format(-net_balance) }}</h2>
+                            <h2 class="text-success">${{ "%.2f"|format(net_balance) }}</h2>
                             <small class="text-muted">You are owed overall</small>
                         {% else %}
                             <h2 class="text-muted">$0.00</h2>

@@ -263,8 +263,9 @@ def dashboard(group_id=None):
     # Total amount you owe to others in this group (FIXED: excludes expenses you paid for)
     total_owed_by_you = sum(share.amount for share in shared_expenses_owed)
     
-    # Net amount (what others owe you minus what you owe others)
-    net_balance = total_owed_to_you - total_owed_by_you
+    # Net amount (what you owe others minus what others owe you)
+    # Positive = you owe money, Negative = you are owed money
+    net_balance = total_owed_by_you - total_owed_to_you
     
     # Pending payments (only what you owe to others with pending status)
     total_pending = sum(share.amount for share in shared_expenses_owed if share.status == 'pending')
