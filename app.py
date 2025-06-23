@@ -226,9 +226,11 @@ def dashboard(group_id=None):
         expense.payer_user = User.query.get(expense.paid_by) if expense.paid_by else None
     
     # Get expenses shared with current user in this group (where you owe money)
+    # EXCLUDE expenses that you paid for yourself (you don't owe yourself money!)
     shared_expenses_owed = db.session.query(ExpenseShare).join(Expense).filter(
         ExpenseShare.user_id == current_user.id,
-        Expense.group_id == group_id
+        Expense.group_id == group_id,
+        Expense.paid_by != current_user.id  # FIXED: Don't include expenses you paid for
     ).all()
     
     # Load related data for shared expenses
@@ -243,10 +245,13 @@ def dashboard(group_id=None):
     ).all()
     
     # Calculate what others owe you (from expenses you paid for)
+    # EXCLUDE your own share from expenses you paid for
     total_owed_to_you = 0
     for expense in expenses_you_paid:
         shares = ExpenseShare.query.filter_by(expense_id=expense.id).all()
-        total_owed_to_you += sum(share.amount for share in shares)
+        # Only count shares from OTHER people, not yourself
+        others_shares = [share for share in shares if share.user_id != current_user.id]
+        total_owed_to_you += sum(share.amount for share in others_shares)
     
     # Calculate totals for this group
     # Total expenses you created (not necessarily paid for)
@@ -255,11 +260,11 @@ def dashboard(group_id=None):
     # Total amount you actually paid out of pocket
     total_paid_by_you = sum(expense.amount for expense in expenses_you_paid)
     
-    # Total amount you owe to others in this group
+    # Total amount you owe to others in this group (FIXED: excludes expenses you paid for)
     total_owed_by_you = sum(share.amount for share in shared_expenses_owed)
     
-    # Net amount (what you owe minus what others owe you)
-    net_balance = total_owed_by_you - total_owed_to_you
+    # Net amount (what others owe you minus what you owe others)
+    net_balance = total_owed_to_you - total_owed_by_you
     
     # Pending payments (only what you owe to others with pending status)
     total_pending = sum(share.amount for share in shared_expenses_owed if share.status == 'pending')
