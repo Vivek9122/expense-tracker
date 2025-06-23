@@ -165,62 +165,48 @@
 <script>
 let isUpdating = false; // Prevent infinite loops during updates
 
-// ✨ SPARKS ANIMATION FUNCTIONS ✨
-function createSparks(checkbox) {
-    const memberRow = checkbox.closest('.member-row');
-    
-    // Remove existing spark container if any
-    const existingContainer = memberRow.querySelector('.spark-container');
-    if (existingContainer) {
-        existingContainer.remove();
-    }
-    
-    // Create spark container
-    const sparkContainer = document.createElement('div');
-    sparkContainer.className = 'spark-container';
-    memberRow.appendChild(sparkContainer);
-    
-    // Create multiple sparks
-    const sparkCount = 6;
-    for (let i = 0; i < sparkCount; i++) {
-        const spark = document.createElement('div');
-        spark.className = 'spark';
-        
-        // Random direction for each spark
-        const angle = (360 / sparkCount) * i + (Math.random() - 0.5) * 60; // Spread with some randomness
-        const distance = 25 + Math.random() * 15; // Random distance 25-40px
-        const dx = Math.cos(angle * Math.PI / 180) * distance;
-        const dy = Math.sin(angle * Math.PI / 180) * distance;
-        
-        // Set CSS custom properties for animation
-        spark.style.setProperty('--dx', `${dx}px`);
-        spark.style.setProperty('--dy', `${dy}px`);
-        
-        sparkContainer.appendChild(spark);
-        
-        // Trigger animation with slight delay for each spark
-        setTimeout(() => {
-            spark.classList.add('animate');
-        }, i * 30);
-    }
-    
-    // Clean up sparks after animation
-    setTimeout(() => {
-        if (sparkContainer.parentNode) {
-            sparkContainer.remove();
-        }
-    }, 800);
-}
-
+// 🎈 BOUNCE + GLOW ANIMATION FUNCTIONS 🎈
 function updateMemberRowState(checkbox) {
     const memberRow = checkbox.closest('.member-row');
+    const memberName = memberRow.querySelector('.member-name');
     
     if (checkbox.checked) {
+        // Add selected state with bounce + glow
         memberRow.classList.add('selected');
-        createSparks(checkbox);
+        
+        // Add a subtle bounce to the entire row
+        memberRow.style.animation = 'none';
+        setTimeout(() => {
+            memberRow.style.animation = 'rowBounceIn 0.3s ease-out';
+        }, 10);
+        
+        // Enhanced member name styling
+        memberName.style.transition = 'all 0.3s ease';
+        
     } else {
+        // Remove selected state with smooth fade
         memberRow.classList.remove('selected');
+        
+        // Reset member name styling
+        memberName.style.color = '';
+        memberName.style.textShadow = '';
+        
+        // Add a gentle scale-down effect
+        memberRow.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+            memberRow.style.transform = 'scale(1)';
+        }, 150);
     }
+}
+
+// Enhanced bounce effect for quick actions
+function addDelightfulBounce(element, delay = 0) {
+    setTimeout(() => {
+        element.style.animation = 'none';
+        setTimeout(() => {
+            element.style.animation = 'rowBounceIn 0.3s ease-out';
+        }, 10);
+    }, delay);
 }
 
 function updateSplitCalculation() {
@@ -409,27 +395,40 @@ function updateHiddenInputs(selectedMembers) {
     });
 }
 
-// Quick action functions
+// Quick action functions with enhanced animations
 function selectAllMembers() {
-    document.querySelectorAll('.member-checkbox').forEach((cb, index) => {
+    const checkboxes = document.querySelectorAll('.member-checkbox');
+    
+    checkboxes.forEach((cb, index) => {
         setTimeout(() => {
             cb.checked = true;
             updateMemberRowState(cb);
-        }, index * 100); // Stagger the animations
+            
+            // Add extra bounce for the staggered effect
+            const memberRow = cb.closest('.member-row');
+            addDelightfulBounce(memberRow, 0);
+        }, index * 80); // Slightly faster stagger for better flow
     });
     
     // Update calculation after all animations
     setTimeout(() => {
         updateSplitCalculation();
-    }, document.querySelectorAll('.member-checkbox').length * 100 + 200);
+    }, checkboxes.length * 80 + 200);
 }
 
 function clearAllMembers() {
-    document.querySelectorAll('.member-checkbox').forEach(cb => {
-        cb.checked = false;
-        updateMemberRowState(cb);
+    document.querySelectorAll('.member-checkbox').forEach((cb, index) => {
+        // Add slight delay for smooth clearing animation
+        setTimeout(() => {
+            cb.checked = false;
+            updateMemberRowState(cb);
+        }, index * 30);
     });
-    updateSplitCalculation();
+    
+    // Update calculation after clearing
+    setTimeout(() => {
+        updateSplitCalculation();
+    }, 300);
 }
 
 // Event listeners
@@ -496,51 +495,91 @@ enableSubmitButton(true); // Enable by default for expenses without splitting
     min-height: 80px;
 }
 
-/* ✨ SPARKS ANIMATION STYLES ✨ */
-.spark-container {
-    position: absolute;
-    top: 50%;
-    left: 15px;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 10;
-}
-
-.spark {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: linear-gradient(45deg, #ffd700, #ff6b35);
-    border-radius: 50%;
-    opacity: 0;
-    box-shadow: 0 0 6px #ffd700;
-}
-
-.spark.animate {
-    animation: sparkFly 0.6s ease-out forwards;
-}
-
-@keyframes sparkFly {
-    0% {
-        opacity: 1;
-        transform: translate(0, 0) scale(1);
-    }
-    50% {
-        opacity: 0.8;
-        transform: translate(var(--dx), var(--dy)) scale(1.2);
-    }
-    100% {
-        opacity: 0;
-        transform: translate(calc(var(--dx) * 1.5), calc(var(--dy) * 1.5)) scale(0.3);
-    }
-}
+/* 🎈 BOUNCE + GLOW ANIMATION STYLES 🎈 */
 
 /* Member row selection glow effect */
 .member-row.selected {
-    background-color: rgba(0, 123, 255, 0.1);
-    border-radius: 8px;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.08), rgba(0, 123, 255, 0.12));
+    border-radius: 12px;
+    box-shadow: 
+        0 0 0 2px rgba(0, 123, 255, 0.3),
+        0 4px 12px rgba(0, 123, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: translateY(0);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: rowBounceIn 0.3s ease-out;
+}
+
+.member-row.selected .member-name {
+    color: #0066cc;
+    text-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Row bounce animation */
+@keyframes rowBounceIn {
+    0% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-2px) scale(1.02);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Enhanced checkbox bounce */
+.member-checkbox {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.member-checkbox:checked {
+    animation: checkboxBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkboxBounce {
+    0% { 
+        transform: scale(1); 
+    }
+    30% { 
+        transform: scale(1.25) rotate(5deg); 
+    }
+    60% { 
+        transform: scale(1.1) rotate(-2deg); 
+    }
+    100% { 
+        transform: scale(1.05); 
+    }
+}
+
+/* Checkbox glow effect */
+.member-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: radial-gradient(circle, rgba(0, 123, 255, 0.4) 0%, transparent 70%);
+    border-radius: 4px;
+    z-index: -1;
+    animation: checkboxGlow 0.6s ease-out;
+}
+
+@keyframes checkboxGlow {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
 }
 
 /* Amount field slide-in animation */
@@ -558,30 +597,22 @@ enableSubmitButton(true); // Enable by default for expenses without splitting
     opacity: 0.6;
 }
 
-/* Checkbox bounce effect */
-.member-checkbox {
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+/* Enhanced amount field transitions */
+.member-amount:not(:disabled) {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
 }
 
-.member-checkbox:checked {
-    transform: scale(1.1);
-    animation: checkboxBounce 0.3s ease;
+.member-amount:disabled {
+    transform: translateX(-5px) scale(0.98);
+    opacity: 0.5;
+    box-shadow: none;
 }
 
-@keyframes checkboxBounce {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1.1); }
-}
-
-/* Subtle pulse for selected members */
-.member-row.selected .member-name {
-    animation: selectedPulse 2s ease-in-out infinite;
-}
-
-@keyframes selectedPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
+/* Smooth transitions for all interactive elements */
+.member-row * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>
 {% endblock %} 
