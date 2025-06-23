@@ -166,9 +166,19 @@
 let isUpdating = false; // Prevent infinite loops during updates
 
 // 🎈 BOUNCE + GLOW ANIMATION FUNCTIONS 🎈
+function cleanupSparkContainers() {
+    // Remove any leftover spark containers from previous implementation
+    document.querySelectorAll('.spark-container').forEach(container => {
+        container.remove();
+    });
+}
+
 function updateMemberRowState(checkbox) {
     const memberRow = checkbox.closest('.member-row');
     const memberName = memberRow.querySelector('.member-name');
+    
+    // Clean up any leftover spark containers
+    cleanupSparkContainers();
     
     if (checkbox.checked) {
         // Add selected state with bounce + glow
@@ -470,6 +480,14 @@ document.getElementById('expenseForm').addEventListener('submit', function(e) {
 
 // Initialize
 enableSubmitButton(true); // Enable by default for expenses without splitting
+
+// Clean up any leftover spark containers on page load
+document.addEventListener('DOMContentLoaded', function() {
+    cleanupSparkContainers();
+});
+
+// Also clean up immediately when script runs
+cleanupSparkContainers();
 </script>
 
 <style>
@@ -582,22 +600,11 @@ enableSubmitButton(true); // Enable by default for expenses without splitting
     }
 }
 
-/* Amount field slide-in animation */
+/* Enhanced amount field transitions */
 .member-amount {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.member-amount:not(:disabled) {
-    transform: translateX(0);
-    opacity: 1;
-}
-
-.member-amount:disabled {
-    transform: translateX(-10px);
-    opacity: 0.6;
-}
-
-/* Enhanced amount field transitions */
 .member-amount:not(:disabled) {
     transform: translateX(0) scale(1);
     opacity: 1;
