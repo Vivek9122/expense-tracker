@@ -123,6 +123,37 @@
             </div>
         </div>
 
+        <!-- AI Quick Add Expense -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="mb-3">✨ Quick Add with AI</h6>
+                        <div class="row">
+                            <div class="col-md-9">
+                                <input type="text" class="form-control" 
+                                       placeholder="💬 Try: 'Pizza with roommates $45, I paid, split equally'"
+                                       id="aiExpenseInput">
+                            </div>
+                            <div class="col-md-3">
+                                <div class="btn-group w-100">
+                                    <button class="btn btn-primary" onclick="parseAIExpense()" id="aiCreateBtn">
+                                        ✨ AI Create
+                                    </button>
+                                    <a href="{{ url_for('add_expense', group_id=current_group.id) }}" class="btn btn-outline-primary">
+                                        📝 Manual
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Examples: "Uber $15, paid by Sarah" • "Groceries $120, split with John and Mike" • "Coffee $8, I owe Lisa"
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Expenses Table -->
         <div class="row">
             <div class="col-md-12">
@@ -467,6 +498,83 @@ function submitEdit() {
             location.reload();
         } else {
             alert(data.message);
+        }
+    });
+}
+
+// AI Expense Functions
+function parseAIExpense() {
+    const input = document.getElementById('aiExpenseInput').value.trim();
+    if (!input) {
+        alert('Please enter an expense description');
+        return;
+    }
+    
+    const btn = document.getElementById('aiCreateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Processing...';
+    
+    const groupId = {{ current_group.id if current_group else 'null' }};
+    
+    fetch('/parse_ai_expense', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            text: input,
+            group_id: groupId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '✨ AI Create';
+        
+        if (data.success) {
+            showAIPreview(data.expense);
+        } else {
+            alert('Error parsing expense: ' + data.error);
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = '✨ AI Create';
+        alert('Error: ' + error.message);
+    });
+}
+
+function showAIPreview(expense) {
+    // Simple preview for now - we'll enhance this
+    const message = `Expense Preview:
+Description: ${expense.description}
+Amount: $${expense.amount}
+Category: ${expense.category}
+Paid by: ${expense.paid_by}
+Splits: ${JSON.stringify(expense.splits, null, 2)}
+
+Create this expense?`;
+    
+    if (confirm(message)) {
+        createAIExpense(expense);
+    }
+}
+
+function createAIExpense(expense) {
+    fetch('/create_ai_expense', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(expense)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('aiExpenseInput').value = '';
+            location.reload();
+        } else {
+            alert('Error creating expense: ' + data.error);
         }
     });
 }

@@ -899,6 +899,169 @@ def ensure_basic_functionality():
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
 
+# AI-powered endpoints
+@app.route('/parse_ai_expense', methods=['POST'])
+@login_required
+def parse_ai_expense():
+    """Parse natural language expense description using OpenAI"""
+    try:
+        import openai
+        
+        data = request.get_json()
+        text = data.get('text', '').strip()
+        group_id = data.get('group_id')
+        
+        if not text:
+            return jsonify({'success': False, 'error': 'No text provided'})
+        
+        # Get OpenAI API key from environment
+        openai_key = os.environ.get('OPENAI_API_KEY')
+        if not openai_key:
+            return jsonify({'success': False, 'error': 'OpenAI API key not configured'})
+        
+        # Get group members for context
+        group_members = []
+        if group_id:
+            members = db.session.query(User).join(GroupMember).filter(
+                GroupMember.group_id == group_id
+            ).all()
+            group_members = [{'id': m.id, 'name': m.username, 'email': m.email} for m in members]
+        
+        # Create OpenAI client
+        client = openai.OpenAI(api_key=openai_key)
+        
+        # Create the prompt
+        prompt = f"""Parse this expense description into structured data:
+"{text}"
+
+Available group members: {[m['name'] for m in group_members]}
+Current user: {current_user.username}
+
+Return JSON with:
+- description: clear expense description
+- amount: numeric amount (extract from text)
+- category: one of [Food, Transportation, Housing, Utilities, Entertainment, Shopping, Healthcare, Education, Other]
+- paid_by: who paid (use member name or "current_user" if unclear)
+- splits: array of {{"user_name": "name", "amount": number}} for who owes what
+
+Examples:
+"Pizza $45 split equally with John" → paid_by: "current_user", splits: [{{"user_name": "John", "amount": 22.5}}]
+"Uber $20 paid by Sarah" → paid_by: "Sarah", splits: [{{"user_name": "current_user", "amount": 20}}]
+"""
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an expense parsing assistant. Always return valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1
+        )
+        
+        # Parse the response
+        import json
+        ai_response = response.choices[0].message.content.strip()
+        
+        # Clean up the response if it has markdown formatting
+        if ai_response.startswith('```json'):
+            ai_response = ai_response[7:-3]
+        elif ai_response.startswith('```'):
+            ai_response = ai_response[3:-3]
+        
+        parsed_expense = json.loads(ai_response)
+        
+        # Validate and clean the data
+        expense_data = {
+            'description': parsed_expense.get('description', text)[:200],
+            'amount': float(parsed_expense.get('amount', 0)),
+            'category': parsed_expense.get('category', 'Other'),
+            'paid_by': parsed_expense.get('paid_by', 'current_user'),
+            'splits': parsed_expense.get('splits', []),
+            'group_id': group_id
+        }
+        
+        # Convert paid_by to user ID
+        if expense_data['paid_by'] == 'current_user':
+            expense_data['paid_by_id'] = current_user.id
+            expense_data['paid_by'] = current_user.username
+        else:
+            # Find the user by name
+            paid_by_user = next((m for m in group_members if m['name'].lower() == expense_data['paid_by'].lower()), None)
+            if paid_by_user:
+                expense_data['paid_by_id'] = paid_by_user['id']
+            else:
+                expense_data['paid_by_id'] = current_user.id
+                expense_data['paid_by'] = current_user.username
+        
+        # Convert split user names to IDs
+        for split in expense_data['splits']:
+            if split['user_name'] == 'current_user':
+                split['user_id'] = current_user.id
+                split['user_name'] = current_user.username
+            else:
+                split_user = next((m for m in group_members if m['name'].lower() == split['user_name'].lower()), None)
+                if split_user:
+                    split['user_id'] = split_user['id']
+                else:
+                    split['user_id'] = None  # Invalid user
+        
+        return jsonify({'success': True, 'expense': expense_data})
+        
+    except ImportError:
+        return jsonify({'success': False, 'error': 'OpenAI library not installed'})
+    except json.JSONDecodeError as e:
+        return jsonify({'success': False, 'error': f'Failed to parse AI response: {str(e)}'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'AI parsing failed: {str(e)}'})
+
+@app.route('/create_ai_expense', methods=['POST'])
+@login_required
+def create_ai_expense():
+    """Create an expense from AI-parsed data"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['description', 'amount', 'category', 'paid_by_id', 'group_id']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'success': False, 'error': f'Missing field: {field}'})
+        
+        # Create the expense
+        expense = Expense(
+            amount=float(data['amount']),
+            description=data['description'],
+            category=data['category'],
+            user_id=current_user.id,
+            paid_by=data['paid_by_id'],
+            group_id=data['group_id']
+        )
+        db.session.add(expense)
+        db.session.flush()  # Get the expense ID
+        
+        # Create expense shares
+        total_shared = 0
+        for split in data.get('splits', []):
+            if split.get('user_id') and split.get('amount'):
+                expense_share = ExpenseShare(
+                    expense_id=expense.id,
+                    user_id=split['user_id'],
+                    amount=float(split['amount'])
+                )
+                db.session.add(expense_share)
+                total_shared += float(split['amount'])
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Expense created successfully! Total shared: ${total_shared:.2f}'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': f'Failed to create expense: {str(e)}'})
+
 if __name__ == '__main__':
     with app.app_context():
         create_tables()
