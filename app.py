@@ -2,10 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from flask_mail import Mail, Message
 from sqlalchemy import text, inspect
+import secrets
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
@@ -34,12 +35,35 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(512))
+    reset_token = db.Column(db.String(100), nullable=True)
+    reset_token_expires = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def generate_reset_token(self):
+        """Generate a secure reset token that expires in 1 hour"""
+        self.reset_token = secrets.token_urlsafe(32)
+        self.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        return self.reset_token
+    
+    def verify_reset_token(self, token):
+        """Verify if the reset token is valid and not expired"""
+        if not self.reset_token or not self.reset_token_expires:
+            return False
+        if self.reset_token != token:
+            return False
+        if datetime.utcnow() > self.reset_token_expires:
+            return False
+        return True
+    
+    def clear_reset_token(self):
+        """Clear the reset token after successful password reset"""
+        self.reset_token = None
+        self.reset_token_expires = None
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -146,6 +170,103 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        email = request.form['email']
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            # Generate reset token
+            token = user.generate_reset_token()
+            db.session.commit()
+            
+            # Send reset email
+            try:
+                reset_url = url_for('reset_password', token=token, _external=True)
+                msg = Message(
+                    'Password Reset Request - Expense Tracker',
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[user.email]
+                )
+                msg.body = f'''Hello {user.username},
+
+You have requested to reset your password for your Expense Tracker account.
+
+Click the link below to reset your password:
+{reset_url}
+
+This link will expire in 1 hour for security reasons. If you didn't request this password reset, please ignore this email.
+
+Best regards,
+Expense Tracker Team
+'''
+                msg.html = f'''
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #2c3e50;">Password Reset Request</h2>
+                    <p>Hello <strong>{user.username}</strong>,</p>
+                    <p>You have requested to reset your password for your Expense Tracker account.</p>
+                    <p>Click the button below to reset your password:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{reset_url}" style="background-color: #3498db; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+                    </div>
+                    <p><strong>This link will expire in 1 hour</strong> for security reasons.</p>
+                    <p>If you didn't request this password reset, please ignore this email.</p>
+                    <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                    <p style="color: #7f8c8d; font-size: 12px;">Best regards,<br>Expense Tracker Team</p>
+                </div>
+                '''
+                
+                mail.send(msg)
+                flash('Password reset instructions have been sent to your email.', 'success')
+            except Exception as e:
+                print(f"Email sending error: {e}")
+                flash('Error sending email. Please try again later.', 'danger')
+        else:
+            # Don't reveal if email exists or not (security best practice)
+            flash('If that email address exists in our system, you will receive password reset instructions.', 'info')
+        
+        return redirect(url_for('login'))
+    
+    return render_template('forgot_password.html')
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    # Find user with this token
+    user = User.query.filter_by(reset_token=token).first()
+    
+    if not user or not user.verify_reset_token(token):
+        flash('Invalid or expired password reset link.', 'danger')
+        return redirect(url_for('forgot_password'))
+    
+    if request.method == 'POST':
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        
+        if password != confirm_password:
+            flash('Passwords do not match!', 'danger')
+            return render_template('reset_password.html', token=token)
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long!', 'danger')
+            return render_template('reset_password.html', token=token)
+        
+        # Update password and clear reset token
+        user.set_password(password)
+        user.clear_reset_token()
+        db.session.commit()
+        
+        flash('Your password has been reset successfully! You can now log in.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('reset_password.html', token=token)
 
 @app.route('/dashboard')
 @app.route('/dashboard/<int:group_id>')
@@ -878,11 +999,37 @@ def migrate_existing_tables():
                         print("✅ Added group_id column")
                     
                     trans.commit()
-                    print("✅ Table migration completed")
+                    print("✅ Expense table migration completed")
                     
                 except Exception as e:
                     trans.rollback()
-                    print(f"❌ Migration failed: {e}")
+                    print(f"❌ Expense table migration failed: {e}")
+        
+        # Check if user table exists and add reset token columns
+        if 'user' in inspector.get_table_names():
+            user_columns = [col['name'] for col in inspector.get_columns('user')]
+            
+            with db.engine.connect() as conn:
+                trans = conn.begin()
+                try:
+                    # Add reset_token column if it doesn't exist
+                    if 'reset_token' not in user_columns:
+                        print("Adding reset_token column to user table...")
+                        conn.execute(text("ALTER TABLE user ADD COLUMN reset_token VARCHAR(100)"))
+                        print("✅ Added reset_token column")
+                    
+                    # Add reset_token_expires column if it doesn't exist
+                    if 'reset_token_expires' not in user_columns:
+                        print("Adding reset_token_expires column to user table...")
+                        conn.execute(text("ALTER TABLE user ADD COLUMN reset_token_expires TIMESTAMP"))
+                        print("✅ Added reset_token_expires column")
+                    
+                    trans.commit()
+                    print("✅ User table migration completed")
+                    
+                except Exception as e:
+                    trans.rollback()
+                    print(f"❌ User table migration failed: {e}")
                     
     except Exception as e:
         print(f"❌ Migration error: {e}")
