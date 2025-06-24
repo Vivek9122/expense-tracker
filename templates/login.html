@@ -2,27 +2,44 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">Login</h3>
+    <div class="col-md-6 col-lg-5">
+        <div class="modern-card">
+            <div class="card-header text-center">
+                <h3 style="color: var(--primary-color); font-weight: 700; margin: 0; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    Welcome Back
+                </h3>
+                <p style="color: var(--text-secondary); margin: 8px 0 0 0; font-size: 14px;">Sign in to your account</p>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('login') }}">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                    <div class="mb-4">
+                        <label for="email" class="form-label-modern">
+                            <i class="bi bi-envelope me-1"></i>Email Address
+                        </label>
+                        <input type="email" class="form-control form-control-modern" id="email" name="email" 
+                               placeholder="Enter your email" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="mb-4">
+                        <label for="password" class="form-label-modern">
+                            <i class="bi bi-lock me-1"></i>Password
+                        </label>
+                        <input type="password" class="form-control form-control-modern" id="password" name="password" 
+                               placeholder="Enter your password" required>
                     </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Login</button>
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-modern-primary">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
                     </div>
                 </form>
-                <div class="text-center mt-3">
-                    <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+                <div class="text-center">
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">
+                        Don't have an account? 
+                        <a href="{{ url_for('register') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                            Create one here
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>

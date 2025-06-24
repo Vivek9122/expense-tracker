@@ -3,54 +3,96 @@
 {% block content %}
 <div class="row">
     <div class="col-md-8">
-        <div class="card">
+        <div class="modern-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Your Groups</h5>
-                <a href="{{ url_for('create_group') }}" class="btn btn-primary btn-sm">Create New Group</a>
+                <h5 class="mb-0" style="color: var(--text-primary); display: flex; align-items: center;">
+                    <i class="bi bi-people me-2" style="color: var(--primary-color);"></i>
+                    Your Groups
+                </h5>
+                <a href="{{ url_for('create_group') }}" class="btn btn-modern-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>Create New Group
+                </a>
             </div>
             <div class="card-body">
                 {% if user_groups %}
-                    <div class="list-group">
+                    <div class="row">
                         {% for group in user_groups %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">{{ group.name }}</h6>
-                                <p class="mb-1 text-muted">{{ group.description or 'No description' }}</p>
-                                <small class="text-muted">Created: {{ group.created_at.strftime('%Y-%m-%d') }}</small>
-                            </div>
-                            <div class="btn-group" role="group">
-                                <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-outline-primary btn-sm">
-                                    View Expenses
-                                </a>
-                                {% if group.created_by == current_user.id %}
-                                    <a href="{{ url_for('manage_group', group_id=group.id) }}" class="btn btn-outline-secondary btn-sm">
-                                        Manage
+                        <div class="col-md-6 mb-4">
+                            <div style="border: 2px solid var(--border-color); border-radius: var(--border-radius-sm); padding: 20px; background: linear-gradient(135deg, var(--background-white) 0%, var(--background-light) 100%); transition: all 0.3s ease; cursor: pointer;" 
+                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)'; this.style.borderColor='var(--primary-color)';" 
+                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='var(--border-color)';">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h6 style="color: var(--primary-color); font-weight: 600; margin: 0;">{{ group.name }}</h6>
+                                    {% if group.created_by == current_user.id %}
+                                        <span style="background: rgba(255, 193, 7, 0.2); color: #f57c00; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 500;">
+                                            <i class="bi bi-crown"></i> Admin
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 14px;">
+                                    {{ group.description or 'No description' }}
+                                </p>
+                                <small style="color: var(--text-muted); font-size: 12px; display: block; margin-bottom: 16px;">
+                                    <i class="bi bi-calendar3 me-1"></i>Created: {{ group.created_at.strftime('%Y-%m-%d') }}
+                                </small>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-modern-primary btn-sm" style="flex: 1; text-align: center;">
+                                        <i class="bi bi-eye me-1"></i>View Expenses
                                     </a>
-                                {% endif %}
+                                    {% if group.created_by == current_user.id %}
+                                        <a href="{{ url_for('manage_group', group_id=group.id) }}" class="btn btn-modern-outline btn-sm">
+                                            <i class="bi bi-gear"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-4">
-                        <h5 class="text-muted">No Groups Yet</h5>
-                        <p class="text-muted">Create your first group to start tracking expenses with others.</p>
-                        <a href="{{ url_for('create_group') }}" class="btn btn-primary">Create Your First Group</a>
+                    <div class="text-center py-5">
+                        <div style="font-size: 64px; color: var(--primary-color); margin-bottom: 16px;">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h5 style="color: var(--text-primary); margin-bottom: 8px;">No Groups Yet</h5>
+                        <p style="color: var(--text-secondary); margin-bottom: 24px;">Create your first group to start tracking expenses with others.</p>
+                        <a href="{{ url_for('create_group') }}" class="btn btn-modern-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Create Your First Group
+                        </a>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
+        <div class="modern-card">
             <div class="card-header">
-                <h5 class="mb-0">Join a Group</h5>
+                <h5 class="mb-0" style="color: var(--text-primary); display: flex; align-items: center;">
+                    <i class="bi bi-person-plus me-2" style="color: var(--primary-color);"></i>
+                    Join a Group
+                </h5>
             </div>
             <div class="card-body">
-                <p class="text-muted">Ask a group admin to add you to their group using your email address:</p>
-                <div class="alert alert-info">
-                    <strong>Your Email:</strong><br>
-                    {{ current_user.email }}
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
+                    Ask a group admin to add you to their group using your email address:
+                </p>
+                <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border: none; border-radius: var(--border-radius-sm); padding: 16px; border-left: 4px solid var(--primary-color);">
+                    <div style="color: var(--primary-dark); font-weight: 600; font-size: 14px; margin-bottom: 4px;">
+                        <i class="bi bi-envelope me-2"></i>Your Email:
+                    </div>
+                    <div style="color: var(--primary-dark); font-family: 'Courier New', monospace; font-size: 14px;">
+                        {{ current_user.email }}
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 16px; background: var(--background-light); border-radius: var(--border-radius-sm);">
+                    <h6 style="color: var(--text-primary); margin-bottom: 8px; font-size: 14px;">
+                        <i class="bi bi-lightbulb me-1" style="color: var(--primary-color);"></i>How it works:
+                    </h6>
+                    <ol style="color: var(--text-secondary); font-size: 13px; margin: 0; padding-left: 20px;">
+                        <li>Share your email with a group admin</li>
+                        <li>They add you to their group</li>
+                        <li>Start tracking expenses together!</li>
+                    </ol>
                 </div>
             </div>
         </div>
