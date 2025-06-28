@@ -480,12 +480,85 @@
         /* Groups Section */
         .groups-container {
             padding: 2rem;
+            position: relative;
+        }
+
+        .groups-carousel {
+            position: relative;
+            overflow: hidden;
         }
 
         .groups-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            display: flex;
             gap: 1.5rem;
+            transition: transform 0.3s ease;
+            padding: 0 3rem;
+        }
+
+        .group-card {
+            min-width: 320px;
+            flex: 0 0 auto;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            color: var(--text-secondary);
+        }
+
+        .carousel-nav:hover {
+            background: var(--bg-glass-strong);
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .carousel-nav.prev {
+            left: 1rem;
+        }
+
+        .carousel-nav.next {
+            right: 1rem;
+        }
+
+        .groups-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .indicator-dot.active {
+            background: var(--primary-gradient);
+            transform: scale(1.2);
         }
 
         .group-card {
@@ -1032,24 +1105,39 @@
                     </div>
                 </div>
                 <div class="groups-container">
-                    <div class="groups-grid">
-                        {% for group in user_groups[:3] %}
-                        <div class="group-card" onclick="window.location.href='{{ url_for('dashboard', group_id=group.id) }}'">
-                            <div class="group-name">{{ group.name }}</div>
-                            <div class="group-description">{{ group.description or 'No description' }}</div>
-                            <div class="group-stats">
-                                <div class="group-stat">
-                                    <div class="group-stat-value">${{ "%.0f"|format(total_paid_by_you or 0) }}</div>
-                                    <div class="group-stat-label">Total Spent</div>
-                                </div>
-                                <div class="group-stat">
-                                    <div class="group-stat-value">{{ expenses|length }}</div>
-                                    <div class="group-stat-label">Expenses</div>
+                    <div class="groups-carousel">
+                        <button class="carousel-nav prev" onclick="scrollGroups('prev')" id="prevBtn">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="carousel-nav next" onclick="scrollGroups('next')" id="nextBtn">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <div class="groups-grid" id="groupsGrid">
+                            {% for group in user_groups %}
+                            <div class="group-card" onclick="window.location.href='{{ url_for('dashboard', group_id=group.id) }}'">
+                                <div class="group-name">{{ group.name }}</div>
+                                <div class="group-description">{{ group.description or 'No description' }}</div>
+                                <div class="group-stats">
+                                    <div class="group-stat">
+                                        <div class="group-stat-value">${{ "%.0f"|format(total_paid_by_you or 0) }}</div>
+                                        <div class="group-stat-label">Total Spent</div>
+                                    </div>
+                                    <div class="group-stat">
+                                        <div class="group-stat-value">{{ expenses|length }}</div>
+                                        <div class="group-stat-label">Expenses</div>
+                                    </div>
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
+                    </div>
+                    {% if user_groups|length > 1 %}
+                    <div class="groups-indicator" id="groupsIndicator">
+                        {% for group in user_groups %}
+                        <div class="indicator-dot {% if loop.index0 == 0 %}active{% endif %}" onclick="scrollToGroup({{ loop.index0 }})"></div>
                         {% endfor %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
@@ -1198,6 +1286,87 @@
                 }
             });
         });
+
+        // Groups carousel functionality
+        let currentGroupIndex = 0;
+        const groupsGrid = document.getElementById('groupsGrid');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const indicators = document.querySelectorAll('.indicator-dot');
+        
+        function updateCarouselButtons() {
+            if (!groupsGrid) return;
+            
+            const groupCards = groupsGrid.querySelectorAll('.group-card');
+            const totalGroups = groupCards.length;
+            const containerWidth = groupsGrid.parentElement.clientWidth - 120; // Account for padding and nav buttons
+            const cardWidth = 320 + 24; // Card width + gap
+            const visibleCards = Math.floor(containerWidth / cardWidth);
+            const maxIndex = Math.max(0, totalGroups - visibleCards);
+            
+            if (prevBtn) {
+                prevBtn.classList.toggle('disabled', currentGroupIndex <= 0);
+            }
+            if (nextBtn) {
+                nextBtn.classList.toggle('disabled', currentGroupIndex >= maxIndex);
+            }
+            
+            // Update indicators
+            indicators.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentGroupIndex);
+            });
+        }
+        
+        function scrollGroups(direction) {
+            if (!groupsGrid) return;
+            
+            const groupCards = groupsGrid.querySelectorAll('.group-card');
+            const totalGroups = groupCards.length;
+            const containerWidth = groupsGrid.parentElement.clientWidth - 120;
+            const cardWidth = 320 + 24;
+            const visibleCards = Math.floor(containerWidth / cardWidth);
+            const maxIndex = Math.max(0, totalGroups - visibleCards);
+            
+            if (direction === 'prev' && currentGroupIndex > 0) {
+                currentGroupIndex--;
+            } else if (direction === 'next' && currentGroupIndex < maxIndex) {
+                currentGroupIndex++;
+            }
+            
+            const translateX = currentGroupIndex * cardWidth;
+            groupsGrid.style.transform = `translateX(-${translateX}px)`;
+            
+            updateCarouselButtons();
+        }
+        
+        function scrollToGroup(index) {
+            if (!groupsGrid) return;
+            
+            const groupCards = groupsGrid.querySelectorAll('.group-card');
+            const totalGroups = groupCards.length;
+            const containerWidth = groupsGrid.parentElement.clientWidth - 120;
+            const cardWidth = 320 + 24;
+            const visibleCards = Math.floor(containerWidth / cardWidth);
+            const maxIndex = Math.max(0, totalGroups - visibleCards);
+            
+            currentGroupIndex = Math.min(index, maxIndex);
+            const translateX = currentGroupIndex * cardWidth;
+            groupsGrid.style.transform = `translateX(-${translateX}px)`;
+            
+            updateCarouselButtons();
+        }
+        
+        // Initialize carousel on page load
+        if (groupsGrid) {
+            updateCarouselButtons();
+            
+            // Update on window resize
+            window.addEventListener('resize', () => {
+                currentGroupIndex = 0;
+                groupsGrid.style.transform = 'translateX(0)';
+                updateCarouselButtons();
+            });
+        }
     </script>
 </body>
 </html> 
