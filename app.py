@@ -1,9 +1,18 @@
+# -*- coding: utf-8 -*-
+import os
+import sys
+
+# Force UTF-8 encoding for Windows compatibility
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.detach())
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.detach())
+
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
-import os
 from flask_mail import Mail, Message
 from sqlalchemy import text, inspect
 import secrets
@@ -445,7 +454,7 @@ def dashboard(group_id=None):
     ).first()
     is_admin = user_membership.is_admin if user_membership else False
     
-    return render_template('dashboard.html',
+    return render_template('dashboard_modern.html',
                          expenses=all_group_expenses,
                          shared_expenses=shared_expenses_owed,
                          total_expenses=total_expenses_created,
@@ -492,7 +501,7 @@ def render_basic_dashboard():
                 expenses.append(expense_obj)
                 total_expenses += row[1]
         
-        return render_template('dashboard.html',
+        return render_template('dashboard_modern.html',
                              expenses=expenses,
                              shared_expenses=[],
                              total_expenses=total_expenses,
@@ -507,7 +516,7 @@ def render_basic_dashboard():
     except Exception as e:
         print(f"Basic dashboard error: {e}")
         # Return minimal dashboard
-        return render_template('dashboard.html',
+        return render_template('dashboard_modern.html',
                              expenses=[],
                              shared_expenses=[],
                              total_expenses=0,
@@ -519,6 +528,11 @@ def render_basic_dashboard():
                              user_groups=[],
                              current_group=None,
                              is_admin=False)
+
+@app.route('/budget')
+@login_required
+def budget():
+    return render_template('budget.html')
 
 @app.route('/groups')
 @login_required
@@ -864,7 +878,7 @@ Expense Tracker Team'''
         db.session.commit()
         return redirect(url_for('dashboard', group_id=group_id))
     
-    return render_template('add_expense.html', 
+    return render_template('add_expense_modern.html', 
                          group=group, 
                          all_group_members=all_group_members,
                          other_group_members=other_group_members,
@@ -1011,13 +1025,13 @@ def create_tables():
     try:
         # Simple approach: just create all tables
         db.create_all()
-        print("✅ Database tables created/verified successfully")
+        print("✓ Database tables created/verified successfully")
         
         # Run migration to add missing columns
         migrate_existing_tables()
         
     except Exception as e:
-        print(f"❌ Error creating database tables: {e}")
+        print(f"✗ Error creating database tables: {e}")
         # Don't fail the app startup, just log the error
 
 def migrate_existing_tables():
@@ -1037,20 +1051,20 @@ def migrate_existing_tables():
                         print("Adding paid_by column to expense table...")
                         conn.execute(text("ALTER TABLE expense ADD COLUMN paid_by INTEGER"))
                         conn.execute(text("UPDATE expense SET paid_by = user_id WHERE paid_by IS NULL"))
-                        print("✅ Added paid_by column")
+                        print("✓ Added paid_by column")
                     
                     # Add group_id column if it doesn't exist
                     if 'group_id' not in expense_columns:
                         print("Adding group_id column to expense table...")
                         conn.execute(text("ALTER TABLE expense ADD COLUMN group_id INTEGER"))
-                        print("✅ Added group_id column")
+                        print("✓ Added group_id column")
                     
                     trans.commit()
-                    print("✅ Expense table migration completed")
+                    print("✓ Expense table migration completed")
                     
                 except Exception as e:
                     trans.rollback()
-                    print(f"❌ Expense table migration failed: {e}")
+                    print(f"✗ Expense table migration failed: {e}")
         
         # Check if user table exists and add reset token columns
         if 'user' in inspector.get_table_names():
@@ -1066,7 +1080,7 @@ def migrate_existing_tables():
                     if 'reset_token' not in user_columns:
                         print("Adding reset_token column to user table...")
                         conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN reset_token VARCHAR(100)"))
-                        print("✅ Added reset_token column")
+                        print("✓ Added reset_token column")
                     
                     # Add reset_token_expires column if it doesn't exist
                     if 'reset_token_expires' not in user_columns:
@@ -1074,14 +1088,14 @@ def migrate_existing_tables():
                         # Use TIMESTAMP for PostgreSQL, DATETIME for SQLite
                         timestamp_type = "TIMESTAMP" if 'postgresql' in str(conn.engine.url) else "DATETIME"
                         conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN reset_token_expires {timestamp_type}"))
-                        print("✅ Added reset_token_expires column")
+                        print("✓ Added reset_token_expires column")
                     
                     trans.commit()
-                    print("✅ User table migration completed")
+                    print("✓ User table migration completed")
                     
                 except Exception as e:
                     trans.rollback()
-                    print(f"❌ User table migration failed: {e}")
+                    print(f"✗ User table migration failed: {e}")
                     # Try alternative approach for PostgreSQL
                     if 'postgresql' in str(conn.engine.url):
                         try:
@@ -1090,20 +1104,20 @@ def migrate_existing_tables():
                             
                             if 'reset_token' not in user_columns:
                                 conn.execute(text('ALTER TABLE "user" ADD COLUMN reset_token VARCHAR(100)'))
-                                print("✅ Added reset_token column (PostgreSQL)")
+                                print("✓ Added reset_token column (PostgreSQL)")
                             
                             if 'reset_token_expires' not in user_columns:
                                 conn.execute(text('ALTER TABLE "user" ADD COLUMN reset_token_expires TIMESTAMP'))
-                                print("✅ Added reset_token_expires column (PostgreSQL)")
+                                print("✓ Added reset_token_expires column (PostgreSQL)")
                             
                             trans2.commit()
-                            print("✅ PostgreSQL user table migration completed")
+                            print("✓ PostgreSQL user table migration completed")
                         except Exception as e2:
                             trans2.rollback()
-                            print(f"❌ PostgreSQL migration also failed: {e2}")
+                            print(f"✗ PostgreSQL migration also failed: {e2}")
                     
     except Exception as e:
-        print(f"❌ Migration error: {e}")
+        print(f"✗ Migration error: {e}")
 
 def ensure_basic_functionality():
     """Ensure the app can run even if groups functionality isn't available"""
@@ -1113,9 +1127,9 @@ def ensure_basic_functionality():
             # Check if user table exists (most basic requirement)
             result = conn.execute(db.text("SELECT 1"))
             result.fetchone()
-        print("✅ Database connection verified")
+        print("✓ Database connection verified")
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
+        print(f"✗ Database connection failed: {e}")
 
 # AI-powered endpoints
 @app.route('/parse_ai_expense', methods=['POST'])
@@ -1163,8 +1177,8 @@ Return JSON with:
 - splits: array of {{"user_name": "name", "amount": number}} for who owes what
 
 Examples:
-"Pizza $45 split equally with John" → paid_by: "current_user", splits: [{{"user_name": "John", "amount": 22.5}}]
-"Uber $20 paid by Sarah" → paid_by: "Sarah", splits: [{{"user_name": "current_user", "amount": 20}}]
+"Pizza $45 split equally with John" -> paid_by: "current_user", splits: [{{"user_name": "John", "amount": 22.5}}]
+"Uber $20 paid by Sarah" -> paid_by: "Sarah", splits: [{{"user_name": "current_user", "amount": 20}}]
 """
 
         response = client.chat.completions.create(

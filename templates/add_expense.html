@@ -165,7 +165,7 @@
 <script>
 let isUpdating = false; // Prevent infinite loops during updates
 
-// 🎈 BOUNCE + GLOW ANIMATION FUNCTIONS 🎈
+            // BOUNCE + GLOW ANIMATION FUNCTIONS
 function cleanupSparkContainers() {
     // Remove any leftover spark containers from previous implementation
     document.querySelectorAll('.spark-container').forEach(container => {
@@ -306,7 +306,7 @@ function validateSplitBalance() {
     if (Math.abs(difference) < 0.01) { // Account for floating point precision
         let statusHTML = `
             <div class="text-success">
-                <strong>✅ Balanced</strong><br>
+                                        <strong><i class="bi bi-check-circle text-success"></i> Balanced</strong><br>
                 <small>Total: $${totalAmount.toFixed(2)}</small>
             </div>
             <hr class="my-2">
@@ -328,7 +328,7 @@ function validateSplitBalance() {
     } else if (difference > 0) {
         updateSplitStatus(`
             <div class="text-warning">
-                <strong>⚠️ Unaccounted</strong><br>
+                                        <strong><i class="bi bi-exclamation-triangle text-warning"></i> Unaccounted</strong><br>
                 <small>Remaining: $${difference.toFixed(2)}</small>
             </div>
         `, 'warning');
@@ -336,7 +336,7 @@ function validateSplitBalance() {
     } else {
         updateSplitStatus(`
             <div class="text-danger">
-                <strong>❌ Over by</strong><br>
+                                        <strong><i class="bi bi-x-circle text-danger"></i> Over by</strong><br>
                 <small>Excess: $${Math.abs(difference).toFixed(2)}</small>
             </div>
         `, 'danger');
@@ -513,7 +513,7 @@ cleanupSparkContainers();
     min-height: 80px;
 }
 
-/* 🎈 BOUNCE + GLOW ANIMATION STYLES 🎈 */
+        /* BOUNCE + GLOW ANIMATION STYLES */
 
 /* Member row selection glow effect */
 .member-row.selected {

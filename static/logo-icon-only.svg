@@ -1,0 +1,40 @@
+<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Blue gradient for the wallet -->
+    <linearGradient id="walletGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976D2;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Lighter blue for wallet details -->
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42A5F5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2196F3;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Modern Wallet Icon - Centered -->
+  <g transform="translate(8, 12.5)">
+    <!-- Main wallet body -->
+    <rect x="0" y="0" width="24" height="15" rx="2" ry="2" 
+          fill="url(#walletGradient)"/>
+    
+    <!-- Wallet opening/fold -->
+    <rect x="0" y="0" width="24" height="4" rx="2" ry="2" 
+          fill="url(#accentGradient)"/>
+    
+    <!-- Card slots indication -->
+    <rect x="2" y="6" width="12" height="1" rx="0.5" 
+          fill="rgba(255,255,255,0.4)"/>
+    <rect x="2" y="8.5" width="10" height="1" rx="0.5" 
+          fill="rgba(255,255,255,0.3)"/>
+    
+    <!-- Card protruding from wallet -->
+    <rect x="18" y="4.5" width="4.5" height="7.5" rx="0.75" 
+          fill="url(#accentGradient)"/>
+    
+    <!-- Money/bills indication -->
+    <rect x="22.5" y="6" width="2" height="6" rx="0.3" 
+          fill="rgba(255,255,255,0.6)"/>
+  </g>
+</svg> 

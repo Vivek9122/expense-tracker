@@ -1,321 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-/* Custom Dark Sidebar Styles */
-.dark-sidebar {
-    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-    border-radius: 12px;
-    border: none;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-}
-
-.dark-sidebar .sidebar-header {
-    background: rgba(233, 30, 99, 0.1);
-    border-bottom: 1px solid rgba(233, 30, 99, 0.2);
-    padding: 20px;
-    border-radius: 12px 12px 0 0;
-}
-
-.dark-sidebar .sidebar-header h5 {
-    color: #ffffff;
-    font-weight: 600;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.dark-sidebar .sidebar-header .settings-icon {
-    color: #e91e63;
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
-
-.dark-sidebar .sidebar-header .settings-icon:hover {
-    color: #ff1744;
-    transform: rotate(90deg);
-}
-
-.dark-sidebar .sidebar-content {
-    padding: 20px;
-    color: #ffffff;
-}
-
-.dark-sidebar .sidebar-section {
-    margin-bottom: 24px;
-}
-
-.dark-sidebar .section-title {
-    color: #e91e63;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-}
-
-.dark-sidebar .section-title i {
-    margin-right: 8px;
-    font-size: 14px;
-}
-
-.dark-sidebar .group-info {
-    background: rgba(255,255,255,0.05);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 16px;
-}
-
-.dark-sidebar .group-info .group-name {
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 16px;
-    margin-bottom: 4px;
-}
-
-.dark-sidebar .group-info .group-desc {
-    color: rgba(255,255,255,0.7);
-    font-size: 12px;
-    margin-bottom: 8px;
-}
-
-.dark-sidebar .group-info .group-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.dark-sidebar .group-info .member-count {
-    background: rgba(233, 30, 99, 0.2);
-    color: #e91e63;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-}
-
-.dark-sidebar .group-info .admin-badge {
-    background: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-}
-
-.dark-sidebar .balance-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.dark-sidebar .balance-item:last-child {
-    border-bottom: none;
-}
-
-.dark-sidebar .balance-user {
-    color: rgba(255,255,255,0.9);
-    font-size: 14px;
-}
-
-.dark-sidebar .balance-amount.owe {
-    color: #ff5252;
-    font-weight: 600;
-}
-
-.dark-sidebar .balance-amount.owed {
-    color: #4caf50;
-    font-weight: 600;
-}
-
-.dark-sidebar .net-balance {
-    background: rgba(233, 30, 99, 0.1);
-    border: 1px solid rgba(233, 30, 99, 0.3);
-    border-radius: 8px;
-    padding: 12px;
-    text-align: center;
-    margin-top: 12px;
-}
-
-.dark-sidebar .net-balance .net-amount {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.dark-sidebar .net-balance .net-amount.positive {
-    color: #ff5252;
-}
-
-.dark-sidebar .net-balance .net-amount.negative {
-    color: #4caf50;
-}
-
-.dark-sidebar .net-balance .net-label {
-    font-size: 11px;
-    color: rgba(255,255,255,0.7);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.dark-sidebar .action-btn {
-    background: rgba(233, 30, 99, 0.1);
-    border: 1px solid rgba(233, 30, 99, 0.3);
-    color: #e91e63;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s ease;
-    margin-right: 8px;
-    margin-top: 8px;
-}
-
-.dark-sidebar .action-btn:hover {
-    background: rgba(233, 30, 99, 0.2);
-    color: #ff1744;
-    transform: translateY(-1px);
-}
-
-.dark-sidebar .switch-group-btn {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.8);
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    text-decoration: none;
-    display: block;
-    text-align: center;
-    transition: all 0.3s ease;
-    margin-top: 16px;
-}
-
-.dark-sidebar .switch-group-btn:hover {
-    background: rgba(255,255,255,0.15);
-    color: #ffffff;
-    transform: translateY(-1px);
-}
-</style>
-
-<div class="row">
+<div class="row animate-fade-in">
     <!-- Left Sidebar -->
-    <div class="col-md-3">
-        <div class="dark-sidebar">
+    <div class="col-lg-3 col-md-4 mb-4">
+        <div class="glass-card animate-slide-up">
             {% if current_group %}
-            <!-- Group Header -->
-            <div class="sidebar-header">
-                <h5>
-                    {{ current_group.name }}
-                    {% if is_admin %}
-                    <a href="{{ url_for('manage_group', group_id=current_group.id) }}" class="settings-icon" title="Manage Members">
-                        <i class="bi bi-gear"></i>
+            <div class="card-body p-4">
+                <h5 class="text-gradient mb-3">{{ current_group.name }}</h5>
+                <p style="color: var(--text-secondary);">{{ current_group.description or 'No description' }}</p>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('add_expense', group_id=current_group.id) }}" class="btn btn-modern-primary btn-sm me-2 mb-2">
+                        <i class="bi bi-plus me-1"></i>Add Expense
                     </a>
-                    {% endif %}
-                </h5>
-            </div>
-            
-            <div class="sidebar-content">
-                <!-- Group Info -->
-                <div class="group-info">
-                    <div class="group-desc">{{ current_group.description or 'No description' }}</div>
-                    <div class="group-meta">
-                        <span class="member-count">
-                            <i class="bi bi-people"></i> {{ current_group.members|length }} members
-                        </span>
-                        {% if is_admin %}
-                        <span class="admin-badge">
-                            <i class="bi bi-crown"></i> Admin
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Balances Section -->
-                <div class="sidebar-section">
-                    <div class="section-title">
-                        <i class="bi bi-wallet2"></i> Balances
-                    </div>
-                    
-                    <!-- You Owe -->
-                    {% if total_owed_by_you > 0 %}
-                    <div style="margin-bottom: 16px;">
-                        <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 8px;">You owe:</div>
-                        <div class="balance-item">
-                            <span class="balance-user">Total Amount</span>
-                            <span class="balance-amount owe">${{ "%.2f"|format(total_owed_by_you) }}</span>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Others Owe You -->
-                    {% if total_owed_to_you > 0 %}
-                    <div style="margin-bottom: 16px;">
-                        <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 8px;">Others owe you:</div>
-                        <div class="balance-item">
-                            <span class="balance-user">Total Amount</span>
-                            <span class="balance-amount owed">${{ "%.2f"|format(total_owed_to_you) }}</span>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Net Balance -->
-                    <div class="net-balance">
-                        <div class="net-label">Net Balance</div>
-                        {% if net_balance > 0 %}
-                            <div class="net-amount positive">${{ "%.2f"|format(net_balance) }}</div>
-                            <div style="font-size: 11px; color: rgba(255,255,255,0.6);">You owe overall</div>
-                        {% elif net_balance < 0 %}
-                            <div class="net-amount negative">${{ "%.2f"|format(-net_balance) }}</div>
-                            <div style="font-size: 11px; color: rgba(255,255,255,0.6);">You are owed overall</div>
-                        {% else %}
-                            <div class="net-amount" style="color: rgba(255,255,255,0.8);">$0.00</div>
-                            <div style="font-size: 11px; color: rgba(255,255,255,0.6);">All settled</div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="sidebar-section">
-                    <div class="section-title">
-                        <i class="bi bi-lightning"></i> Quick Actions
-                    </div>
-                    <a href="{{ url_for('add_expense', group_id=current_group.id) }}" class="action-btn">
-                        <i class="bi bi-plus"></i> Add Expense
-                    </a>
-                    <a href="{{ url_for('groups') }}" class="action-btn">
-                        <i class="bi bi-list"></i> All Groups
+                    <a href="{{ url_for('groups') }}" class="btn btn-modern-outline btn-sm mb-2">
+                        <i class="bi bi-list me-1"></i>All Groups
                     </a>
                 </div>
             </div>
-            
-            <!-- Switch Group -->
-            <a href="{{ url_for('groups') }}" class="switch-group-btn">
-                <i class="bi bi-arrow-left-right"></i> Switch Group ({{ user_groups|length }} total)
-            </a>
-            
             {% else %}
-            <!-- No Group Selected -->
-            <div class="sidebar-header">
-                <h5>No Group Selected</h5>
-            </div>
-            <div class="sidebar-content">
-                <div class="group-info">
-                    <div class="group-desc">Select a group to start tracking expenses</div>
-                </div>
-                <a href="{{ url_for('create_group') }}" class="action-btn">
-                    <i class="bi bi-plus-circle"></i> Create Group
-                </a>
-                <a href="{{ url_for('groups') }}" class="action-btn">
-                    <i class="bi bi-list"></i> All Groups
+            <div class="card-body p-4 text-center">
+                <h5 style="color: var(--text-primary);">No Group Selected</h5>
+                <p style="color: var(--text-secondary);">Select a group to start tracking expenses</p>
+                <a href="{{ url_for('create_group') }}" class="btn btn-modern-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Create Group
                 </a>
             </div>
             {% endif %}
@@ -323,457 +32,213 @@
     </div>
     
     <!-- Main Content -->
-    <div class="col-md-9">
+    <div class="col-lg-9 col-md-8">
         {% if current_group %}
         <!-- Group Header -->
-        <div class="card mb-4">
+        <div class="glass-card mb-4 animate-slide-up">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="mb-1">{{ current_group.name }}</h4>
-                        <p class="text-muted mb-0">{{ current_group.description or 'No description' }}</p>
+                        <h3 class="text-gradient mb-2">{{ current_group.name }}</h3>
+                        <p style="color: var(--text-secondary); margin: 0;">{{ current_group.description or 'No description' }}</p>
                     </div>
                     <div>
-                        <span class="badge bg-info">{{ current_group.members|length }} members</span>
+                        <span class="badge-modern badge-info">
+                            <i class="bi bi-people me-1"></i>{{ current_group.members|length }} members
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
         
         <!-- Summary Cards -->
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card mb-4" style="border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                    <div class="card-body" style="padding: 24px;">
-                        <h5 class="card-title" style="color: #6c757d; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Total Paid by You</h5>
-                        <h2 style="color: #2d2d2d; font-weight: 700; margin-bottom: 4px;">${{ "%.2f"|format(total_paid_by_you) }}</h2>
-                        <small style="color: #6c757d; font-size: 12px;">Amount you actually paid</small>
+        <div class="row g-4 mb-5">
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card animate-slide-up">
+                    <div class="card-body">
+                        <h6 style="color: var(--text-secondary); font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">Total Paid by You</h6>
+                        <h2 style="color: var(--text-primary); font-weight: 800; margin-bottom: 6px;">${{ "%.2f"|format(total_paid_by_you) }}</h2>
+                        <small style="color: var(--text-muted); font-size: 12px;">Amount you actually paid</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card mb-4" style="border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);">
-                    <div class="card-body" style="padding: 24px;">
-                        <h5 class="card-title" style="color: #e91e63; font-size: 14px; font-weight: 500; margin-bottom: 8px;">You Owe</h5>
-                        <h2 style="color: #e91e63; font-weight: 700; margin-bottom: 4px;">${{ "%.2f"|format(total_owed_by_you) }}</h2>
-                        <small style="color: #ad1457; font-size: 12px;">Amount you owe to others</small>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card animate-slide-up" style="background: linear-gradient(135deg, rgba(255, 82, 82, 0.1) 0%, var(--bg-glass) 100%); border-color: rgba(255, 82, 82, 0.2);">
+                    <div class="card-body">
+                        <h6 style="color: var(--text-secondary); font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">You Owe</h6>
+                        <h2 style="color: var(--danger); font-weight: 800; margin-bottom: 6px;">${{ "%.2f"|format(total_owed_by_you) }}</h2>
+                        <small style="color: var(--text-muted); font-size: 12px;">Amount you owe to others</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card mb-4" style="border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);">
-                    <div class="card-body" style="padding: 24px;">
-                        <h5 class="card-title" style="color: #4caf50; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Others Owe You</h5>
-                        <h2 style="color: #4caf50; font-weight: 700; margin-bottom: 4px;">${{ "%.2f"|format(total_owed_to_you) }}</h2>
-                        <small style="color: #2e7d32; font-size: 12px;">Amount others owe you</small>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card animate-slide-up" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, var(--bg-glass) 100%); border-color: rgba(76, 175, 80, 0.2);">
+                    <div class="card-body">
+                        <h6 style="color: var(--text-secondary); font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">Others Owe You</h6>
+                        <h2 style="color: var(--success); font-weight: 800; margin-bottom: 6px;">${{ "%.2f"|format(total_owed_to_you) }}</h2>
+                        <small style="color: var(--text-muted); font-size: 12px;">Amount others owe you</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card mb-4" style="border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                    <div class="card-body" style="padding: 24px;">
-                        <h5 class="card-title" style="color: #6c757d; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Net Balance</h5>
+            <div class="col-lg-3 col-md-6">
+                <div class="glass-card animate-slide-up">
+                    <div class="card-body">
+                        <h6 style="color: var(--text-secondary); font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">Net Balance</h6>
                         {% if net_balance > 0 %}
-                            <h2 style="color: #e91e63; font-weight: 700; margin-bottom: 4px;">${{ "%.2f"|format(net_balance) }}</h2>
-                            <small style="color: #ad1457; font-size: 12px;">You owe overall</small>
+                            <h2 style="color: var(--danger); font-weight: 800; margin-bottom: 6px;">${{ "%.2f"|format(net_balance) }}</h2>
+                            <small style="color: var(--text-muted); font-size: 12px;">You owe overall</small>
                         {% elif net_balance < 0 %}
-                            <h2 style="color: #4caf50; font-weight: 700; margin-bottom: 4px;">${{ "%.2f"|format(-net_balance) }}</h2>
-                            <small style="color: #2e7d32; font-size: 12px;">You are owed overall</small>
+                            <h2 style="color: var(--success); font-weight: 800; margin-bottom: 6px;">${{ "%.2f"|format(-net_balance) }}</h2>
+                            <small style="color: var(--text-muted); font-size: 12px;">You are owed overall</small>
                         {% else %}
-                            <h2 style="color: #6c757d; font-weight: 700; margin-bottom: 4px;">$0.00</h2>
-                            <small style="color: #6c757d; font-size: 12px;">All settled</small>
+                            <h2 style="color: var(--text-primary); font-weight: 800; margin-bottom: 6px;">$0.00</h2>
+                            <small style="color: var(--text-muted); font-size: 12px;">All settled</small>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- AI Quick Add Expense -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card" style="border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);">
-                    <div class="card-body" style="padding: 24px;">
-                        <h6 class="mb-3" style="color: #e91e63; font-weight: 600; display: flex; align-items: center;">
-                            <i class="bi bi-magic" style="margin-right: 8px;"></i>
-                            Quick Add with AI
-                        </h6>
-                        <div class="row">
-                            <div class="col-md-9">
-                                <input type="text" class="form-control" 
-                                       style="border: 2px solid #e9ecef; border-radius: 8px; padding: 12px 16px; font-size: 14px;"
-                                       placeholder="💬 Try: 'Pizza with roommates $45, I paid, split equally'"
-                                       id="aiExpenseInput">
-                            </div>
-                            <div class="col-md-3">
-                                <div class="btn-group w-100">
-                                    <button class="btn" onclick="parseAIExpense()" id="aiCreateBtn"
-                                            style="background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%); color: white; border: none; border-radius: 8px; padding: 12px 16px; font-weight: 600; font-size: 14px;">
-                                        ✨ AI Create
-                                    </button>
-                                    <a href="{{ url_for('add_expense', group_id=current_group.id) }}" 
-                                       class="btn" 
-                                       style="background: rgba(233, 30, 99, 0.1); color: #e91e63; border: 2px solid rgba(233, 30, 99, 0.2); border-radius: 8px; padding: 12px 16px; font-weight: 600; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                                        📝 Manual
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <small style="color: #6c757d; font-size: 12px; display: block; margin-top: 12px;">
-                            Examples: "Uber $15, paid by Sarah" • "Groceries $120, split with John and Mike" • "Coffee $8, I owe Lisa"
-                        </small>
+        <!-- AI Quick Add -->
+        <div class="glass-card mb-5 animate-slide-up" style="background: linear-gradient(135deg, var(--bg-glass) 0%, rgba(225, 86, 10, 0.05) 100%); border-color: rgba(225, 86, 10, 0.2);">
+            <div class="card-body p-4">
+                <h6 style="color: var(--primary-orange); font-weight: 700; display: flex; align-items: center; margin-bottom: 20px;">
+                    <i class="bi bi-magic me-2" style="font-size: 20px;"></i>
+                    Quick Add with AI
+                </h6>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <input type="text" 
+                               class="form-control form-control-modern" 
+                               placeholder="Try: Pizza with roommates $45, I paid, split equally"
+                               id="aiExpenseInput">
                     </div>
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-modern-primary flex-grow-1" onclick="parseAIExpense()" id="aiCreateBtn">
+                                <i class="bi bi-magic"></i> AI Create
+                            </button>
+                            <a href="{{ url_for('add_expense', group_id=current_group.id) }}" 
+                               class="btn btn-modern-outline">
+                                <i class="bi bi-pencil"></i> Manual
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small style="color: var(--text-muted); font-size: 12px;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Examples: Uber $15, paid by Sarah - Groceries $120, split with John and Mike
+                    </small>
                 </div>
             </div>
         </div>
 
         <!-- Expenses Table -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Recent Expenses</h5>
-                        <a href="{{ url_for('add_expense', group_id=current_group.id) }}" class="btn btn-primary btn-sm">Add Expense</a>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th>Category</th>
-                                        <th>Total Amount</th>
-                                        <th>Paid by</th>
-                                        <th>Your Share</th>
-                                        <th>Shared With</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for expense in expenses %}
-                                    <tr>
-                                        <td>{{ expense.date.strftime('%Y-%m-%d') }}</td>
-                                        <td>{{ expense.description }}</td>
-                                        <td>{{ expense.category }}</td>
-                                        <td>${{ "%.2f"|format(expense.amount) }}</td>
-                                        <td>
-                                            {% if expense.paid_by == current_user.id %}
-                                                <span class="badge bg-primary">You</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">Other Member</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            ${{ "%.2f"|format(expense.user_share) }}
-                                        </td>
-                                        <td>
-                                            {% if expense.shared_with %}
-                                                {% for share in expense.shared_with %}
-                                                    <span class="badge bg-info me-1">
-                                                        {% if share.user %}
-                                                            {{ share.user.username }}: ${{ "%.2f"|format(share.amount) }}
-                                                        {% else %}
-                                                            User ID {{ share.user_id }}: ${{ "%.2f"|format(share.amount) }}
-                                                        {% endif %}
-                                                    </span>
-                                                {% endfor %}
-                                            {% else %}
-                                                <span class="badge bg-secondary">Not shared</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <button class="btn btn-sm btn-outline-primary edit-expense-btn" 
-                                                        data-expense-id="{{ expense.id }}" 
-                                                        data-description="{{ expense.description }}" 
-                                                        data-amount="{{ expense.amount }}" 
-                                                        data-category="{{ expense.category }}" 
-                                                        title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-danger delete-expense-btn" 
-                                                        data-expense-id="{{ expense.id }}" 
-                                                        title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                                {% if not expense.shared_with %}
-                                                    <button class="btn btn-sm btn-outline-success share-expense-btn" 
-                                                            data-expense-id="{{ expense.id }}" 
-                                                            title="Share">
-                                                        <i class="bi bi-share"></i>
-                                                    </button>
+        <div class="glass-card animate-slide-up">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--bg-glass-light) 0%, transparent 100%); border-bottom: 1px solid var(--border-primary); padding: 24px;">
+                <h5 class="mb-0" style="font-weight: 700; color: var(--text-primary);">Recent Expenses</h5>
+                <a href="{{ url_for('add_expense', group_id=current_group.id) }}" class="btn btn-modern-primary btn-sm">
+                    <i class="bi bi-plus me-1"></i>Add Expense
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-modern">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Total Amount</th>
+                                <th>Paid by</th>
+                                <th>Your Share</th>
+                                <th>Shared With</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses %}
+                            <tr>
+                                <td style="font-weight: 500;">{{ expense.date.strftime('%Y-%m-%d') }}</td>
+                                <td style="color: var(--text-primary); font-weight: 500;">{{ expense.description }}</td>
+                                <td>
+                                    <span class="badge-modern badge-secondary">{{ expense.category }}</span>
+                                </td>
+                                <td style="font-weight: 600; color: var(--text-primary);">${{ "%.2f"|format(expense.amount) }}</td>
+                                <td>
+                                    {% if expense.paid_by == current_user.id %}
+                                        <span class="badge-modern badge-primary">You</span>
+                                    {% else %}
+                                        <span class="badge-modern badge-secondary">Other Member</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-weight: 600; color: var(--primary-orange);">
+                                    ${{ "%.2f"|format(expense.user_share) }}
+                                </td>
+                                <td>
+                                    {% if expense.shared_with %}
+                                        {% for share in expense.shared_with %}
+                                            <span class="badge-modern badge-info me-1" style="font-size: 10px;">
+                                                {% if share.user %}
+                                                    {{ share.user.username }}: ${{ "%.2f"|format(share.amount) }}
+                                                {% else %}
+                                                    User ID {{ share.user_id }}: ${{ "%.2f"|format(share.amount) }}
                                                 {% endif %}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="badge-modern badge-secondary">Not shared</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-modern-outline" 
+                                                data-expense-id="{{ expense.id }}" 
+                                                data-description="{{ expense.description }}" 
+                                                data-amount="{{ expense.amount }}" 
+                                                data-category="{{ expense.category }}" 
+                                                title="Edit"
+                                                style="padding: 6px 10px;">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-modern-danger" 
+                                                data-expense-id="{{ expense.id }}" 
+                                                title="Delete"
+                                                style="padding: 6px 10px;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
-        {% if shared_expenses %}
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Expenses Shared With You</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th>Paid By</th>
-                                        <th>Your Share</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for share in shared_expenses %}
-                                    <tr>
-                                        <td>{{ share.expense.date.strftime('%Y-%m-%d') }}</td>
-                                        <td>{{ share.expense.description }}</td>
-                                        <td>
-                                            {% if share.expense.creator %}
-                                                {{ share.expense.creator.username }}
-                                            {% else %}
-                                                Creator ID: {{ share.expense.user_id }}
-                                            {% endif %}
-                                        </td>
-                                        <td>${{ "%.2f"|format(share.amount) }}</td>
-                                        <td>
-                                            {% if share.status == 'pending' %}
-                                                <span class="badge bg-warning">Pending</span>
-                                            {% elif share.status == 'paid' %}
-                                                <span class="badge bg-success">Paid</span>
-                                            {% else %}
-                                                <span class="badge bg-danger">{{ share.status }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if share.status == 'pending' %}
-                                                <button class="btn btn-sm btn-success mark-paid-btn" 
-                                                        data-share-id="{{ share.id }}">
-                                                    Mark as Paid
-                                                </button>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
         
         {% else %}
         <!-- No Group Selected -->
-        <div class="card">
-            <div class="card-body text-center py-5">
-                <h5 class="text-muted">No Group Selected</h5>
-                <p class="text-muted">Please select a group from the sidebar or create a new one to start tracking expenses.</p>
-                <a href="{{ url_for('create_group') }}" class="btn btn-primary">Create Your First Group</a>
+        <div class="glass-card text-center py-5 animate-slide-up">
+            <div class="card-body">
+                <div class="mb-4">
+                    <i class="bi bi-people" style="font-size: 4rem; color: var(--text-muted);"></i>
+                </div>
+                <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 16px;">No Group Selected</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 1.1rem;">
+                    Please select a group from the sidebar or create a new one to start tracking expenses.
+                </p>
+                <a href="{{ url_for('create_group') }}" class="btn btn-modern-primary btn-lg">
+                    <i class="bi bi-plus-circle me-2"></i>Create Your First Group
+                </a>
             </div>
         </div>
         {% endif %}
-    </div>
-</div>
-
-<!-- Share Expense Modal -->
-<div class="modal fade" id="shareExpenseModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Share Expense</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="shareExpenseForm">
-                    <input type="hidden" id="expenseId" name="expense_id">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Friend's Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="amount" class="form-label">Amount to Share</label>
-                        <input type="number" class="form-control" id="amount" name="amount" step="0.01" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="submitShare()">Share</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Expense Modal -->
-<div class="modal fade" id="editExpenseModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Expense</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editExpenseForm">
-                    <input type="hidden" id="editExpenseId" name="expense_id">
-                    <div class="mb-3">
-                        <label for="editDescription" class="form-label">Description</label>
-                        <input type="text" class="form-control" id="editDescription" name="description" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editAmount" class="form-label">Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="editAmount" name="amount" step="0.01" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editCategory" class="form-label">Category</label>
-                        <select class="form-select" id="editCategory" name="category" required>
-                            <option value="Food">Food</option>
-                            <option value="Transportation">Transportation</option>
-                            <option value="Housing">Housing</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Healthcare">Healthcare</option>
-                            <option value="Education">Education</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="submitEdit()">Save Changes</button>
-            </div>
-        </div>
     </div>
 </div>
 
 <script>
-// Handle share expense buttons
-document.querySelectorAll('.share-expense-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const expenseId = this.dataset.expenseId;
-        document.getElementById('expenseId').value = expenseId;
-        new bootstrap.Modal(document.getElementById('shareExpenseModal')).show();
-    });
-});
-
-// Handle edit expense buttons
-document.querySelectorAll('.edit-expense-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const expenseId = this.dataset.expenseId;
-        const description = this.dataset.description;
-        const amount = this.dataset.amount;
-        const category = this.dataset.category;
-        
-        document.getElementById('editExpenseId').value = expenseId;
-        document.getElementById('editDescription').value = description;
-        document.getElementById('editAmount').value = amount;
-        document.getElementById('editCategory').value = category;
-        new bootstrap.Modal(document.getElementById('editExpenseModal')).show();
-    });
-});
-
-// Handle delete expense buttons
-document.querySelectorAll('.delete-expense-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const expenseId = this.dataset.expenseId;
-        
-        if (confirm('Are you sure you want to delete this expense?')) {
-            fetch('/delete_expense', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({expense_id: parseInt(expenseId)})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            });
-        }
-    });
-});
-
-// Handle mark as paid buttons
-document.querySelectorAll('.mark-paid-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const shareId = this.dataset.shareId;
-        
-        fetch('/mark_paid', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({share_id: parseInt(shareId)})
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.message);
-            }
-        });
-    });
-});
-
-function submitShare() {
-    const form = document.getElementById('shareExpenseForm');
-    const formData = new FormData(form);
-    
-    fetch('/share_expense', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    });
-}
-
-function submitEdit() {
-    const form = document.getElementById('editExpenseForm');
-    const formData = new FormData(form);
-    
-    fetch('/edit_expense', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    });
-}
-
 // AI Expense Functions
 function parseAIExpense() {
     const input = document.getElementById('aiExpenseInput').value.trim();
@@ -784,7 +249,7 @@ function parseAIExpense() {
     
     const btn = document.getElementById('aiCreateBtn');
     btn.disabled = true;
-    btn.innerHTML = '⏳ Processing...';
+    btn.innerHTML = '<i class="bi bi-hourglass"></i> Processing...';
     
     const groupId = {{ current_group.id if current_group else 'null' }};
     
@@ -801,7 +266,7 @@ function parseAIExpense() {
     .then(response => response.json())
     .then(data => {
         btn.disabled = false;
-        btn.innerHTML = '✨ AI Create';
+        btn.innerHTML = '<i class="bi bi-magic"></i> AI Create';
         
         if (data.success) {
             showAIPreview(data.expense);
@@ -811,19 +276,17 @@ function parseAIExpense() {
     })
     .catch(error => {
         btn.disabled = false;
-        btn.innerHTML = '✨ AI Create';
+        btn.innerHTML = '<i class="bi bi-magic"></i> AI Create';
         alert('Error: ' + error.message);
     });
 }
 
 function showAIPreview(expense) {
-    // Simple preview for now - we'll enhance this
     const message = `Expense Preview:
 Description: ${expense.description}
 Amount: $${expense.amount}
 Category: ${expense.category}
 Paid by: ${expense.paid_by}
-Splits: ${JSON.stringify(expense.splits, null, 2)}
 
 Create this expense?`;
     

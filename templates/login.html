@@ -1,53 +1,120 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center animate-fade-in">
     <div class="col-md-6 col-lg-5">
-        <div class="modern-card">
-            <div class="card-header text-center">
-                <h3 style="color: var(--primary-color); font-weight: 700; margin: 0; display: flex; align-items: center; justify-content: center;">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>
-                    Welcome Back
-                </h3>
-                <p style="color: var(--text-secondary); margin: 8px 0 0 0; font-size: 14px;">Sign in to your account</p>
-            </div>
-            <div class="card-body">
+        <div class="glass-card animate-slide-up">
+            <div class="card-body p-5">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <div class="mb-4">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-orange-light) 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: var(--shadow-lg);">
+                            <i class="bi bi-box-arrow-in-right" style="font-size: 2rem; color: white;"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-gradient mb-2" style="font-weight: 700;">Welcome Back</h2>
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 1rem;">Sign in to your account to continue</p>
+                </div>
+
+                <!-- Login Form -->
                 <form method="POST" action="{{ url_for('login') }}">
                     <div class="mb-4">
                         <label for="email" class="form-label-modern">
-                            <i class="bi bi-envelope me-1"></i>Email Address
+                            <i class="bi bi-envelope"></i>Email Address
                         </label>
-                        <input type="email" class="form-control form-control-modern" id="email" name="email" 
-                               placeholder="Enter your email" required>
+                        <input type="email" 
+                               class="form-control form-control-modern" 
+                               id="email" 
+                               name="email" 
+                               placeholder="Enter your email address"
+                               required>
                     </div>
+
                     <div class="mb-4">
                         <label for="password" class="form-label-modern">
-                            <i class="bi bi-lock me-1"></i>Password
+                            <i class="bi bi-lock"></i>Password
                         </label>
-                        <input type="password" class="form-control form-control-modern" id="password" name="password" 
-                               placeholder="Enter your password" required>
+                        <input type="password" 
+                               class="form-control form-control-modern" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Enter your password"
+                               required>
                     </div>
-                    <div class="d-grid mb-3">
-                        <button type="submit" class="btn btn-modern-primary">
+
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-modern-primary btn-lg">
                             <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
                         </button>
                     </div>
                 </form>
-                <div class="text-center mb-3">
-                    <a href="{{ url_for('forgot_password') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 500; font-size: 14px;">
-                        <i class="bi bi-key me-1"></i>Forgot Password?
-                    </a>
-                </div>
+
+                <!-- Links -->
                 <div class="text-center">
-                    <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">
-                        Don't have an account? 
-                        <a href="{{ url_for('register') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
-                            Create one here
+                    <div class="mb-3">
+                        <a href="{{ url_for('forgot_password') }}" 
+                           style="color: var(--primary-orange); text-decoration: none; font-weight: 500; font-size: 14px; transition: all 0.3s ease;">
+                            <i class="bi bi-key me-1"></i>Forgot your password?
                         </a>
-                    </p>
+                    </div>
+                    
+                    <div style="padding: 20px 0; border-top: 1px solid var(--border-primary);">
+                        <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">
+                            Don't have an account? 
+                            <a href="{{ url_for('register') }}" 
+                               style="color: var(--primary-orange); text-decoration: none; font-weight: 600; transition: all 0.3s ease;">
+                                Create one here
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="text-center mt-4">
+            <div class="glass-card p-4">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="mb-2">
+                            <i class="bi bi-shield-check" style="font-size: 1.5rem; color: var(--primary-green);"></i>
+                        </div>
+                        <small style="color: var(--text-secondary);">Secure</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-2">
+                            <i class="bi bi-lightning-fill" style="font-size: 1.5rem; color: var(--primary-orange);"></i>
+                        </div>
+                        <small style="color: var(--text-secondary);">Fast</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-2">
+                            <i class="bi bi-people-fill" style="font-size: 1.5rem; color: var(--info);"></i>
+                        </div>
+                        <small style="color: var(--text-secondary);">Social</small>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Hover effects for links */
+a[href*="forgot_password"]:hover,
+a[href*="register"]:hover {
+    color: var(--primary-orange-light) !important;
+    transform: translateY(-1px);
+}
+
+/* Form focus effects */
+.form-control-modern:focus {
+    transform: translateY(-2px);
+}
+
+/* Button hover animation */
+.btn-modern-primary:hover {
+    box-shadow: 0 8px 25px rgba(225, 86, 10, 0.3);
+}
+</style>
 {% endblock %} 

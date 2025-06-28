@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Spenzie</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            
+            --bg-primary: #0f0f23;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #1a1a2e;
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --bg-glass-strong: rgba(255, 255, 255, 0.1);
+            
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.6);
+            
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 25px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.2);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.3);
+            
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 2rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: translateY(-2px);
+        }
+
+        .logo svg {
+            height: 60px;
+            width: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 2rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 0;
+            margin: 2px 1rem;
+            border-radius: var(--radius-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--primary-gradient);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-glass-strong);
+            color: var(--text-primary);
+            transform: translateX(4px);
+        }
+
+        .nav-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .nav-item.active {
+            background: var(--bg-glass-strong);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-item i {
+            margin-right: 0.875rem;
+            font-size: 1.125rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item.active i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        /* Header */
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-container {
+            position: relative;
+            margin-right: 1rem;
+        }
+
+        .search-bar {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            width: 300px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--border-hover);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+            background: var(--bg-glass-strong);
+        }
+
+        .search-bar::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-glass);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .user-profile:hover {
+            background: var(--bg-glass-strong);
+            border-color: var(--border-hover);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-icon.primary {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            color: #667eea;
+        }
+
+        .stat-icon.success {
+            background: linear-gradient(135deg, rgba(75, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
+            color: #4facfe;
+        }
+
+        .stat-icon.warning {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            color: #43e97b;
+        }
+
+        .stat-icon.danger {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            color: #fa709a;
+        }
+
+        .stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .stat-change.positive {
+            color: #43e97b;
+        }
+
+        .stat-change.negative {
+            color: #fa709a;
+        }
+
+        /* Content Sections */
+        .content-section {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-modern {
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-glass-strong);
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        /* Groups Section */
+        .groups-container {
+            padding: 2rem;
+        }
+
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .group-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .group-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .group-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+        }
+
+        .group-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .group-name {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .group-description {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .group-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .group-stat {
+            text-align: center;
+        }
+
+        .group-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .group-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Expenses List */
+        .expenses-list {
+            padding: 0;
+        }
+
+        .expense-item {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .expense-item:hover {
+            background: var(--bg-glass-strong);
+        }
+
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+
+        .expense-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .expense-details {
+            flex: 1;
+        }
+
+        .expense-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .expense-meta {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .expense-amount {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        .expense-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .expense-item:hover .expense-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-glass);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-glass-strong);
+            color: var(--text-primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+
+            .search-bar {
+                width: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .content-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .search-bar {
+                width: 100%;
+                max-width: 250px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .groups-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .expense-item {
+                padding: 1rem;
+            }
+
+            .expense-actions {
+                opacity: 1;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .animate-in-delay {
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        /* Profile Dropdown */
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            min-width: 200px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .profile-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: var(--radius-sm);
+            margin: 0.25rem;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-glass-strong);
+            color: var(--text-primary);
+        }
+
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+                    <div class="sidebar-header">
+            <a href="{{ url_for('dashboard') }}" class="logo">
+                <svg width="280" height="72" viewBox="0 0 220 54" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <!-- Premium gradient matching the theme -->
+                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+                      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+                    </linearGradient>
+                    
+                    <!-- Accent gradient for highlights -->
+                    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                    </linearGradient>
+                    
+                    <!-- Text gradient -->
+                    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                      <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:1" />
+                    </linearGradient>
+                    
+                    <!-- Glow effect -->
+                    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                      <feMerge> 
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                    
+                    <!-- Glass effect -->
+                    <filter id="glass" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="1"/>
+                      <feOffset dx="0" dy="1" result="offset"/>
+                    </filter>
+                  </defs>
+                  
+                  <!-- Icon container with glassmorphism -->
+                  <g transform="translate(3, 9)">
+                    <!-- Background glass circle -->
+                    <circle cx="18" cy="18" r="16.5" 
+                            fill="rgba(255,255,255,0.08)" 
+                            stroke="rgba(255,255,255,0.15)" 
+                            stroke-width="0.75"
+                            filter="url(#glass)"/>
+                    
+                    <!-- Modern financial icon -->
+                    <g transform="translate(9, 9)">
+                      <!-- Credit card stack -->
+                      <rect x="0" y="4.5" width="18" height="12" rx="2.25" 
+                            fill="url(#logoGradient)" 
+                            opacity="0.9"/>
+                      <rect x="1.5" y="1.5" width="18" height="12" rx="2.25" 
+                            fill="url(#accentGradient)" 
+                            opacity="0.7"/>
+                      
+                      <!-- Card details -->
+                      <rect x="3" y="4.5" width="9" height="1.5" rx="0.75" 
+                            fill="rgba(255,255,255,0.6)"/>
+                      <rect x="3" y="7.5" width="6" height="1.2" rx="0.6" 
+                            fill="rgba(255,255,255,0.4)"/>
+                      
+                      <!-- Chip -->
+                      <rect x="13.5" y="4.5" width="3" height="2.25" rx="0.45" 
+                            fill="rgba(255,255,255,0.8)"/>
+                    </g>
+                    
+                    <!-- Floating elements for premium feel -->
+                    <circle cx="30" cy="12" r="1.5" fill="url(#accentGradient)" opacity="0.6"/>
+                    <circle cx="33" cy="24" r="1.2" fill="url(#logoGradient)" opacity="0.5"/>
+                  </g>
+                  
+                  <!-- Premium Typography -->
+                  <text x="48" y="33" 
+                        font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" 
+                        font-size="24" 
+                        font-weight="800" 
+                        letter-spacing="-0.45px"
+                        fill="url(#textGradient)">spenzie</text>
+                </svg>
+            </a>
+        </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="{{ url_for('dashboard') }}" class="nav-item active">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('groups') }}" class="nav-item">
+                    <i class="bi bi-people"></i>
+                    Groups
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="bi bi-bar-chart"></i>
+                    Analytics
+                </a>
+                <a href="{{ url_for('budget') }}" class="nav-item">
+                    <i class="bi bi-piggy-bank"></i>
+                    Budget
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Account</div>
+                <a href="{{ url_for('profile') }}" class="nav-item">
+                    <i class="bi bi-person"></i>
+                    Profile
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="bi bi-gear"></i>
+                    Settings
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="content-header animate-in">
+                <div>
+                    <h1 class="page-title">Financial Overview</h1>
+                    <p class="page-subtitle">Track your expenses and manage your finances effortlessly</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-container">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="search-bar" placeholder="Ask AI about your expenses...">
+                    </div>
+                    <div class="user-profile" onclick="toggleProfileDropdown()">
+                        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+                        <div class="user-info">
+                            <div class="user-name">{{ current_user.username }}</div>
+                            <div class="user-role">Premium User</div>
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                        
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <a href="{{ url_for('profile') }}" class="dropdown-item">
+                                <i class="bi bi-person"></i>
+                                Profile Settings
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="bi bi-bell"></i>
+                                Notifications
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="bi bi-question-circle"></i>
+                                Help & Support
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('logout') }}" class="dropdown-item">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid animate-in-delay">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-title">Total Paid</div>
+                            <div class="stat-value">${{ "%.2f"|format(total_paid_by_you or 0) }}</div>
+                        </div>
+                        <div class="stat-icon primary">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                    </div>
+                    <div class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i>
+                        <span>12% from last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-title">You Owe</div>
+                            <div class="stat-value">${{ "%.2f"|format(total_owed_by_you or 0) }}</div>
+                        </div>
+                        <div class="stat-icon danger">
+                            <i class="bi bi-arrow-up-circle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-change negative">
+                        <i class="bi bi-arrow-down"></i>
+                        <span>5% from last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-title">Owed to You</div>
+                            <div class="stat-value">${{ "%.2f"|format(total_owed_to_you or 0) }}</div>
+                        </div>
+                        <div class="stat-icon success">
+                            <i class="bi bi-arrow-down-circle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i>
+                        <span>8% from last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-title">Net Balance</div>
+                            <div class="stat-value {% if net_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {% if net_balance > 0 %}-{% endif %} ${{ "%.2f"|format(net_balance|abs or 0) }}
+                            </div>
+                        </div>
+                        <div class="stat-icon warning">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                    </div>
+                    <div class="stat-change {% if net_balance <= 0 %}positive{% else %}negative{% endif %}">
+                        <i class="bi bi-{% if net_balance <= 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                        <span>{% if net_balance <= 0 %}You're in good shape!{% else %}Pay attention to spending{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groups Section -->
+            {% if user_groups %}
+            <div class="content-section animate-in-delay">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Your Groups</h2>
+                        <p class="section-subtitle">Manage expenses across different groups</p>
+                    </div>
+                    <div class="section-actions">
+                        <a href="{{ url_for('groups') }}" class="btn-modern btn-outline">
+                            <i class="bi bi-eye"></i>
+                            View All
+                        </a>
+                        <a href="{{ url_for('create_group') }}" class="btn-modern btn-primary">
+                            <i class="bi bi-plus"></i>
+                            New Group
+                        </a>
+                    </div>
+                </div>
+                <div class="groups-container">
+                    <div class="groups-grid">
+                        {% for group in user_groups[:3] %}
+                        <div class="group-card" onclick="window.location.href='{{ url_for('dashboard', group_id=group.id) }}'">
+                            <div class="group-name">{{ group.name }}</div>
+                            <div class="group-description">{{ group.description or 'No description' }}</div>
+                            <div class="group-stats">
+                                <div class="group-stat">
+                                    <div class="group-stat-value">${{ "%.0f"|format(total_paid_by_you or 0) }}</div>
+                                    <div class="group-stat-label">Total Spent</div>
+                                </div>
+                                <div class="group-stat">
+                                    <div class="group-stat-value">{{ expenses|length }}</div>
+                                    <div class="group-stat-label">Expenses</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Expenses -->
+            <div class="content-section animate-in-delay">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Recent Expenses</h2>
+                        <p class="section-subtitle">Your latest financial activities</p>
+                    </div>
+                    <div class="section-actions">
+                        {% if current_group %}
+                        <a href="{{ url_for('add_expense', group_id=current_group.id) }}" class="btn-modern btn-primary">
+                            <i class="bi bi-plus"></i>
+                            Add Expense
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="expenses-list">
+                    {% if expenses %}
+                        {% for expense in expenses[:10] %}
+                        <div class="expense-item">
+                            <div class="expense-icon {% if expense.category == 'Food' %}primary{% elif expense.category == 'Transport' %}success{% elif expense.category == 'Entertainment' %}warning{% else %}danger{% endif %}">
+                                {% if expense.category == 'Food' %}
+                                    <i class="bi bi-cup-straw"></i>
+                                {% elif expense.category == 'Transport' %}
+                                    <i class="bi bi-car-front"></i>
+                                {% elif expense.category == 'Entertainment' %}
+                                    <i class="bi bi-controller"></i>
+                                {% elif expense.category == 'Shopping' %}
+                                    <i class="bi bi-bag"></i>
+                                {% elif expense.category == 'Bills' %}
+                                    <i class="bi bi-receipt"></i>
+                                {% else %}
+                                    <i class="bi bi-cash"></i>
+                                {% endif %}
+                            </div>
+                            <div class="expense-details">
+                                <div class="expense-title">{{ expense.description }}</div>
+                                <div class="expense-meta">
+                                    {{ expense.date.strftime('%B %d, %Y') }} • {{ expense.category }}
+                                    {% if expense.payer_user and expense.payer_user.id != current_user.id %}
+                                        • Paid by {{ expense.payer_user.username }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="expense-amount">${{ "%.2f"|format(expense.amount) }}</div>
+                            <div class="expense-actions">
+                                <button class="action-btn" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="action-btn" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 3rem;">
+                            <i class="bi bi-receipt" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                            <h3 style="color: var(--text-muted); font-weight: 500;">No expenses yet</h3>
+                            <p style="color: var(--text-muted); margin-bottom: 2rem;">Start tracking your expenses by adding your first expense</p>
+                            {% if current_group %}
+                            <a href="{{ url_for('add_expense', group_id=current_group.id) }}" class="btn-modern btn-primary">
+                                <i class="bi bi-plus"></i>
+                                Add Your First Expense
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Profile dropdown toggle
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userProfile = document.querySelector('.user-profile');
+            const dropdown = document.getElementById('profileDropdown');
+            
+            if (!userProfile.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Search functionality
+        document.querySelector('.search-bar').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.trim();
+                if (query) {
+                    // Implement AI search functionality here
+                    console.log('AI Query:', query);
+                    // For now, show a placeholder
+                    alert('AI search functionality coming soon! Query: ' + query);
+                }
+            }
+        });
+
+        // Add smooth scrolling and animation triggers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add intersection observer for animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all animated elements
+            document.querySelectorAll('.animate-in, .animate-in-delay').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'all 0.6s ease-out';
+                observer.observe(el);
+            });
+        });
+
+        // Add loading states for buttons
+        document.querySelectorAll('.btn-modern').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.getAttribute('href') && this.getAttribute('href') !== '#') {
+                    this.style.opacity = '0.7';
+                    this.style.pointerEvents = 'none';
+                    
+                    setTimeout(() => {
+                        this.style.opacity = '1';
+                        this.style.pointerEvents = 'auto';
+                    }, 1000);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

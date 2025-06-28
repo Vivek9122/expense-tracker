@@ -1,47 +1,229 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 text-center">
-        <h1 class="display-4 mb-4">Welcome to Expense Tracker</h1>
-        <p class="lead mb-4">Track your expenses, share with friends, and manage your finances together.</p>
-        
-        <div class="row mt-5">
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <i class="bi bi-cash-stack display-4 text-primary mb-3"></i>
-                        <h3>Track Expenses</h3>
-                        <p>Easily record and categorize your daily expenses</p>
-                    </div>
+<div class="animate-fade-in">
+    <!-- Hero Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10 text-center">
+            <div class="mb-5">
+                <h1 class="display-3 mb-4 text-gradient">
+                    Track. Share. Simplify.
+                </h1>
+                <p class="lead mb-4" style="color: var(--text-secondary); font-size: 1.3rem; font-weight: 400;">
+                    The modern way to manage expenses with friends and family. Split bills, track spending, and settle up with ease.
+                </p>
+                
+                {% if not current_user.is_authenticated %}
+                <div class="mt-5">
+                    <a href="{{ url_for('register') }}" class="btn btn-modern-primary btn-lg me-3 animate-slide-up" style="animation-delay: 0.2s;">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Get Started Free
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-modern-outline btn-lg animate-slide-up" style="animation-delay: 0.4s;">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </a>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <i class="bi bi-people display-4 text-primary mb-3"></i>
-                        <h3>Share Expenses</h3>
-                        <p>Split bills and track shared expenses with friends</p>
-                    </div>
+                {% else %}
+                <div class="mt-5">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-modern-primary btn-lg me-3">
+                        <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                    </a>
+                    <a href="{{ url_for('groups') }}" class="btn btn-modern-outline btn-lg">
+                        <i class="bi bi-people me-2"></i>My Groups
+                    </a>
                 </div>
+                {% endif %}
             </div>
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <i class="bi bi-graph-up display-4 text-primary mb-3"></i>
-                        <h3>View Analytics</h3>
-                        <p>Get insights into your spending patterns</p>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card h-100 animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="card-body text-center p-4">
+                    <div class="mb-4">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-orange-light) 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: var(--shadow-lg);">
+                            <i class="bi bi-cash-stack" style="font-size: 2rem; color: white;"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-3" style="color: var(--text-primary); font-weight: 700;">Smart Expense Tracking</h4>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Effortlessly record and categorize your expenses with our intuitive interface. AI-powered suggestions make tracking faster than ever.
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge-modern badge-primary">
+                            <i class="bi bi-lightning-fill me-1"></i>AI Powered
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
-        {% if not current_user.is_authenticated %}
-        <div class="mt-4">
-            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">Get Started</a>
-            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card h-100 animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="card-body text-center p-4">
+                    <div class="mb-4">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: var(--shadow-lg);">
+                            <i class="bi bi-people-fill" style="font-size: 2rem; color: white;"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-3" style="color: var(--text-primary); font-weight: 700;">Group Expense Sharing</h4>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Create groups for different occasions. Split bills fairly and track who owes what with automatic calculations.
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge-modern badge-success">
+                            <i class="bi bi-shield-check me-1"></i>Fair Split
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
-        {% endif %}
+
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card h-100 animate-slide-up" style="animation-delay: 0.3s;">
+                <div class="card-body text-center p-4">
+                    <div class="mb-4">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--info) 0%, var(--info-light) 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: var(--shadow-lg);">
+                            <i class="bi bi-graph-up-arrow" style="font-size: 2rem; color: white;"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-3" style="color: var(--text-primary); font-weight: 700;">Real-time Analytics</h4>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Get instant insights into your spending patterns. Beautiful charts and reports help you make better financial decisions.
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge-modern badge-info">
+                            <i class="bi bi-bar-chart me-1"></i>Live Data
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Stats Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="glass-card animate-slide-up" style="animation-delay: 0.4s;">
+                <div class="card-body p-5">
+                    <div class="row text-center">
+                        <div class="col-md-3 col-6 mb-4 mb-md-0">
+                            <div class="mb-2">
+                                <h2 class="text-gradient mb-0" style="font-size: 2.5rem; font-weight: 800;">10K+</h2>
+                            </div>
+                            <p style="color: var(--text-secondary); font-weight: 500; margin: 0;">Active Users</p>
+                        </div>
+                        <div class="col-md-3 col-6 mb-4 mb-md-0">
+                            <div class="mb-2">
+                                <h2 class="text-gradient mb-0" style="font-size: 2.5rem; font-weight: 800;">50K+</h2>
+                            </div>
+                            <p style="color: var(--text-secondary); font-weight: 500; margin: 0;">Expenses Tracked</p>
+                        </div>
+                        <div class="col-md-3 col-6 mb-4 mb-md-0">
+                            <div class="mb-2">
+                                <h2 class="text-gradient mb-0" style="font-size: 2.5rem; font-weight: 800;">$2M+</h2>
+                            </div>
+                            <p style="color: var(--text-secondary); font-weight: 500; margin: 0;">Money Managed</p>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="mb-2">
+                                <h2 class="text-gradient mb-0" style="font-size: 2.5rem; font-weight: 800;">99.9%</h2>
+                            </div>
+                            <p style="color: var(--text-secondary); font-weight: 500; margin: 0;">Uptime</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h2 class="text-gradient mb-3" style="font-size: 2.5rem; font-weight: 700;">How It Works</h2>
+                <p style="color: var(--text-secondary); font-size: 1.1rem;">Get started in just three simple steps</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-center animate-slide-up" style="animation-delay: 0.1s;">
+                        <div class="mb-4">
+                            <div style="width: 60px; height: 60px; background: rgba(225, 86, 10, 0.1); border: 2px solid rgba(225, 86, 10, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                <span style="color: var(--primary-orange); font-weight: 800; font-size: 1.5rem;">1</span>
+                            </div>
+                        </div>
+                        <h5 style="color: var(--text-primary); font-weight: 600; margin-bottom: 12px;">Create Your Group</h5>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem;">Set up a group for your household, trip, or any shared expenses scenario.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center animate-slide-up" style="animation-delay: 0.2s;">
+                        <div class="mb-4">
+                            <div style="width: 60px; height: 60px; background: rgba(69, 146, 14, 0.1); border: 2px solid rgba(69, 146, 14, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                <span style="color: var(--primary-green); font-weight: 800; font-size: 1.5rem;">2</span>
+                            </div>
+                        </div>
+                        <h5 style="color: var(--text-primary); font-weight: 600; margin-bottom: 12px;">Add Expenses</h5>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem;">Record expenses and split them automatically or customize the distribution.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center animate-slide-up" style="animation-delay: 0.3s;">
+                        <div class="mb-4">
+                            <div style="width: 60px; height: 60px; background: rgba(33, 150, 243, 0.1); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                <span style="color: var(--info); font-weight: 800; font-size: 1.5rem;">3</span>
+                            </div>
+                        </div>
+                        <h5 style="color: var(--text-primary); font-weight: 600; margin-bottom: 12px;">Settle Up</h5>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem;">View balances and settle debts with integrated payment suggestions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    {% if not current_user.is_authenticated %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <div class="glass-card animate-slide-up" style="animation-delay: 0.5s;">
+                <div class="card-body p-5">
+                    <h3 class="mb-3" style="color: var(--text-primary); font-weight: 700;">Ready to Get Started?</h3>
+                    <p class="mb-4" style="color: var(--text-secondary); font-size: 1.1rem;">
+                        Join thousands of users who are already managing their expenses smarter.
+                    </p>
+                    <div>
+                        <a href="{{ url_for('register') }}" class="btn btn-modern-primary btn-lg me-3">
+                            <i class="bi bi-person-plus me-2"></i>Create Free Account
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-modern-outline btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<style>
+/* Additional animations for landing page */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.glass-card:nth-child(1) { animation-delay: 0.1s; }
+.glass-card:nth-child(2) { animation-delay: 0.2s; }
+.glass-card:nth-child(3) { animation-delay: 0.3s; }
+
+.glass-card:hover {
+    animation: float 3s ease-in-out infinite;
+}
+</style>
 {% endblock %} 

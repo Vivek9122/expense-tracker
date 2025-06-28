@@ -1,49 +1,69 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="modern-card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0" style="color: var(--text-primary); display: flex; align-items: center;">
-                    <i class="bi bi-people me-2" style="color: var(--primary-color);"></i>
+<div class="row animate-fade-in">
+    <div class="col-lg-8 col-md-7">
+        <div class="glass-card animate-slide-up">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--bg-glass-light) 0%, transparent 100%); border-bottom: 1px solid var(--border-primary); padding: 24px;">
+                <h5 class="mb-0" style="color: var(--text-primary); display: flex; align-items: center; font-weight: 700;">
+                    <i class="bi bi-people me-2" style="color: var(--primary-orange);"></i>
                     Your Groups
                 </h5>
                 <a href="{{ url_for('create_group') }}" class="btn btn-modern-primary btn-sm">
                     <i class="bi bi-plus-circle me-1"></i>Create New Group
                 </a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 {% if user_groups %}
-                    <div class="row">
+                    <div class="row g-4">
                         {% for group in user_groups %}
-                        <div class="col-md-6 mb-4">
-                            <div style="border: 2px solid var(--border-color); border-radius: var(--border-radius-sm); padding: 20px; background: linear-gradient(135deg, var(--background-white) 0%, var(--background-light) 100%); transition: all 0.3s ease; cursor: pointer;" 
-                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)'; this.style.borderColor='var(--primary-color)';" 
-                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='var(--border-color)';">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <h6 style="color: var(--primary-color); font-weight: 600; margin: 0;">{{ group.name }}</h6>
-                                    {% if group.created_by == current_user.id %}
-                                        <span style="background: rgba(255, 193, 7, 0.2); color: #f57c00; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 500;">
-                                            <i class="bi bi-crown"></i> Admin
-                                        </span>
-                                    {% endif %}
-                                </div>
-                                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 14px;">
-                                    {{ group.description or 'No description' }}
-                                </p>
-                                <small style="color: var(--text-muted); font-size: 12px; display: block; margin-bottom: 16px;">
-                                    <i class="bi bi-calendar3 me-1"></i>Created: {{ group.created_at.strftime('%Y-%m-%d') }}
-                                </small>
-                                <div class="d-flex gap-2">
-                                    <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-modern-primary btn-sm" style="flex: 1; text-align: center;">
-                                        <i class="bi bi-eye me-1"></i>View Expenses
-                                    </a>
-                                    {% if group.created_by == current_user.id %}
-                                        <a href="{{ url_for('manage_group', group_id=group.id) }}" class="btn btn-modern-outline btn-sm">
-                                            <i class="bi bi-gear"></i>
+                        <div class="col-lg-6 col-md-12">
+                            <div class="glass-card h-100 animate-slide-up" style="animation-delay: {{ loop.index * 0.1 }}s; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;" 
+                                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'; this.style.borderColor='rgba(225, 86, 10, 0.3)';" 
+                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-md)'; this.style.borderColor='var(--border-primary)';">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h6 style="color: var(--primary-orange); font-weight: 700; margin: 0; font-size: 1.1rem;">{{ group.name }}</h6>
+                                        {% if group.created_by == current_user.id %}
+                                            <span class="badge-modern" style="background: rgba(255, 193, 7, 0.15); color: var(--warning); border: 1px solid rgba(255, 193, 7, 0.3);">
+                                                <i class="bi bi-crown"></i> Admin
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px; line-height: 1.5;">
+                                        {{ group.description or 'No description available' }}
+                                    </p>
+                                    
+                                    <!-- Group Stats -->
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <div class="p-2" style="background: var(--bg-glass-light); border-radius: var(--radius-sm); text-align: center;">
+                                                <div style="color: var(--primary-orange); font-weight: 700; font-size: 1.2rem;">{{ group.members|length }}</div>
+                                                <small style="color: var(--text-muted); font-size: 11px;">Members</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="p-2" style="background: var(--bg-glass-light); border-radius: var(--radius-sm); text-align: center;">
+                                                <div style="color: var(--primary-green); font-weight: 700; font-size: 1.2rem;">{{ group.expenses|length if group.expenses else 0 }}</div>
+                                                <small style="color: var(--text-muted); font-size: 11px;">Expenses</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <small style="color: var(--text-muted); font-size: 12px; display: block; margin-bottom: 20px;">
+                                        <i class="bi bi-calendar3 me-1"></i>Created: {{ group.created_at.strftime('%B %d, %Y') }}
+                                    </small>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('dashboard', group_id=group.id) }}" class="btn btn-modern-primary btn-sm flex-grow-1">
+                                            <i class="bi bi-eye me-1"></i>View Expenses
                                         </a>
-                                    {% endif %}
+                                        {% if group.created_by == current_user.id %}
+                                            <a href="{{ url_for('manage_group', group_id=group.id) }}" class="btn btn-modern-outline btn-sm">
+                                                <i class="bi bi-gear"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -51,12 +71,14 @@
                     </div>
                 {% else %}
                     <div class="text-center py-5">
-                        <div style="font-size: 64px; color: var(--primary-color); margin-bottom: 16px;">
-                            <i class="bi bi-people"></i>
+                        <div class="mb-4">
+                            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-orange-light) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: var(--shadow-lg);">
+                                <i class="bi bi-people" style="font-size: 3rem; color: white;"></i>
+                            </div>
                         </div>
-                        <h5 style="color: var(--text-primary); margin-bottom: 8px;">No Groups Yet</h5>
-                        <p style="color: var(--text-secondary); margin-bottom: 24px;">Create your first group to start tracking expenses with others.</p>
-                        <a href="{{ url_for('create_group') }}" class="btn btn-modern-primary">
+                        <h4 style="color: var(--text-primary); margin-bottom: 12px; font-weight: 700;">No Groups Yet</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: 32px; font-size: 1.1rem;">Create your first group to start tracking expenses with others.</p>
+                        <a href="{{ url_for('create_group') }}" class="btn btn-modern-primary btn-lg">
                             <i class="bi bi-plus-circle me-2"></i>Create Your First Group
                         </a>
                     </div>
@@ -64,38 +86,109 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="modern-card">
-            <div class="card-header">
-                <h5 class="mb-0" style="color: var(--text-primary); display: flex; align-items: center;">
-                    <i class="bi bi-person-plus me-2" style="color: var(--primary-color);"></i>
+    
+    <div class="col-lg-4 col-md-5">
+        <div class="glass-card animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--bg-glass-light) 0%, transparent 100%); border-bottom: 1px solid var(--border-primary); padding: 24px;">
+                <h5 class="mb-0" style="color: var(--text-primary); display: flex; align-items: center; font-weight: 700;">
+                    <i class="bi bi-person-plus me-2" style="color: var(--primary-green);"></i>
                     Join a Group
                 </h5>
             </div>
-            <div class="card-body">
-                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
+            <div class="card-body p-4">
+                <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px; line-height: 1.6;">
                     Ask a group admin to add you to their group using your email address:
                 </p>
-                <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border: none; border-radius: var(--border-radius-sm); padding: 16px; border-left: 4px solid var(--primary-color);">
-                    <div style="color: var(--primary-dark); font-weight: 600; font-size: 14px; margin-bottom: 4px;">
-                        <i class="bi bi-envelope me-2"></i>Your Email:
+                
+                <!-- Email Display -->
+                <div style="background: linear-gradient(135deg, rgba(225, 86, 10, 0.1) 0%, rgba(225, 86, 10, 0.05) 100%); border: 1px solid rgba(225, 86, 10, 0.3); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px;">
+                    <div style="color: var(--primary-orange); font-weight: 600; font-size: 14px; margin-bottom: 8px;">
+                        <i class="bi bi-envelope me-2"></i>Your Email Address:
                     </div>
-                    <div style="color: var(--primary-dark); font-family: 'Courier New', monospace; font-size: 14px;">
+                    <div style="color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 15px; font-weight: 600; background: var(--bg-glass-light); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-primary);">
                         {{ current_user.email }}
                     </div>
+                    <button class="btn btn-modern-outline btn-sm mt-2" onclick="copyEmail()" id="copyBtn">
+                        <i class="bi bi-clipboard me-1"></i>Copy Email
+                    </button>
                 </div>
-                <div style="margin-top: 20px; padding: 16px; background: var(--background-light); border-radius: var(--border-radius-sm);">
-                    <h6 style="color: var(--text-primary); margin-bottom: 8px; font-size: 14px;">
-                        <i class="bi bi-lightbulb me-1" style="color: var(--primary-color);"></i>How it works:
+                
+                <!-- How it works -->
+                <div style="background: var(--bg-glass-light); border: 1px solid var(--border-primary); border-radius: var(--radius-md); padding: 20px;">
+                    <h6 style="color: var(--text-primary); margin-bottom: 16px; font-size: 14px; font-weight: 600;">
+                        <i class="bi bi-lightbulb me-2" style="color: var(--primary-orange);"></i>How it works:
                     </h6>
-                    <ol style="color: var(--text-secondary); font-size: 13px; margin: 0; padding-left: 20px;">
-                        <li>Share your email with a group admin</li>
-                        <li>They add you to their group</li>
-                        <li>Start tracking expenses together!</li>
-                    </ol>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-start">
+                            <div style="width: 24px; height: 24px; background: var(--primary-orange); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">1</div>
+                            <div>
+                                <div style="color: var(--text-primary); font-weight: 500; font-size: 13px;">Share your email</div>
+                                <small style="color: var(--text-muted); font-size: 12px;">Send your email to a group admin</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start">
+                            <div style="width: 24px; height: 24px; background: var(--primary-green); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">2</div>
+                            <div>
+                                <div style="color: var(--text-primary); font-weight: 500; font-size: 13px;">Get added to group</div>
+                                <small style="color: var(--text-muted); font-size: 12px;">Admin adds you to their group</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start">
+                            <div style="width: 24px; height: 24px; background: var(--info); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">3</div>
+                            <div>
+                                <div style="color: var(--text-primary); font-weight: 500; font-size: 13px;">Start tracking</div>
+                                <small style="color: var(--text-muted); font-size: 12px;">Begin sharing expenses together!</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="glass-card mt-4 animate-slide-up" style="animation-delay: 0.3s;">
+            <div class="card-body p-4">
+                <h6 style="color: var(--text-primary); font-weight: 600; margin-bottom: 16px;">
+                    <i class="bi bi-bar-chart me-2" style="color: var(--primary-orange);"></i>
+                    Quick Stats
+                </h6>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="text-center p-3" style="background: var(--bg-glass-light); border-radius: var(--radius-sm);">
+                            <div style="color: var(--primary-orange); font-weight: 800; font-size: 1.5rem;">{{ user_groups|length }}</div>
+                            <small style="color: var(--text-muted); font-size: 11px;">Total Groups</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3" style="background: var(--bg-glass-light); border-radius: var(--radius-sm);">
+                            <div style="color: var(--primary-green); font-weight: 800; font-size: 1.5rem;">{{ admin_groups|length if admin_groups else 0 }}</div>
+                            <small style="color: var(--text-muted); font-size: 11px;">Admin Of</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function copyEmail() {
+    const email = "{{ current_user.email }}";
+    navigator.clipboard.writeText(email).then(function() {
+        const btn = document.getElementById('copyBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+        btn.classList.remove('btn-modern-outline');
+        btn.classList.add('btn-modern-success');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-modern-success');
+            btn.classList.add('btn-modern-outline');
+        }, 2000);
+    }).catch(function(err) {
+        alert('Failed to copy email: ' + err);
+    });
+}
+</script>
 {% endblock %} 
